@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api";
 import { modules } from "./modules";
+import PreparationPage from "./features/preparation/PreparationPage";
 
 function Home() {
   return (
@@ -118,6 +119,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/modules/preparation" element={<PreparationPage />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
