@@ -1,0 +1,19 @@
+.story-search {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 22rem) auto minmax(8rem, 12rem);
+  align-items: center;
+  gap: .5rem 1rem;
+  margin: 1rem 0 1.5rem;
+}
+.story-tag {
+  font-size: .85rem;
+  padding: .15rem .55rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  white-space: nowrap;
+}
+.story-tag.ok { background: #e6f2ef; color: #1f5a51; }
+@media (max-width: 720px) {
+  .story-search { grid-template-columns: 1fr; }
+}

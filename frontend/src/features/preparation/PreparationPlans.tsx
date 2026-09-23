@@ -159,6 +159,9 @@ export default function PreparationPlans() {
       <span className="eyebrow">面试准备 / 岗位准备计划</span>
       <h1>先定岗位，再定准备目标</h1>
       <p>计划只保存你写下的目标与岗位要求，列表里永远只有你自己的计划。</p>
+      <p className="footnote">
+        <Link to="/modules/preparation/stories">→ 打开个人经历素材库</Link>
+      </p>
 
       <form className="plan-form" onSubmit={create}>
         <label htmlFor="plan-role">目标岗位</label>

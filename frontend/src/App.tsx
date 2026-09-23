@@ -4,6 +4,7 @@ import { api } from "./api";
 import { modules } from "./modules";
 import PreparationPlans from "./features/preparation/PreparationPlans";
 import PreparationNodes from "./features/preparation/PreparationNodes";
+import PreparationStories from "./features/preparation/PreparationStories";
 
 function Home() {
   return (
@@ -122,6 +123,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/modules/preparation/plans" element={<PreparationPlans />} />
           <Route path="/modules/preparation/plans/:planId/nodes" element={<PreparationNodes />} />
+          <Route path="/modules/preparation/stories" element={<PreparationStories />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
