@@ -173,6 +173,12 @@ export default function PreparationNodes() {
             <div className="plan-actions">
               <button disabled={busy} onClick={() => save(item.node)}>保存草稿</button>
               <button disabled={busy} onClick={() => save(item.node, "DONE")}>标记为已讲清</button>
+              <Link
+                className="plan-enter"
+                to={`/modules/preparation/plans/${planId}/nodes/${item.node.id}/practice`}
+              >
+                练这道题
+              </Link>
             </div>
           </li>
         ))}
