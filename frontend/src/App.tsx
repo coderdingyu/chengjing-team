@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api";
+import RegisterPage from "./features/identity/RegisterPage";
 import { modules } from "./modules";
 
 function Home() {
@@ -102,6 +103,7 @@ export default function App() {
         </Link>
         <nav>
           <Link to="/">工作台</Link>
+          <Link to="/register">注册</Link>
           <a
             href="https://github.com/coderdingyu/chengjing-team"
             target="_blank"
@@ -118,6 +120,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
