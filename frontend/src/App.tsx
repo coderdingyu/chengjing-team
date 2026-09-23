@@ -3,6 +3,7 @@ import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api";
 import { modules } from "./modules";
 import PreparationPlans from "./features/preparation/PreparationPlans";
+import PreparationNodes from "./features/preparation/PreparationNodes";
 
 function Home() {
   return (
@@ -120,6 +121,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/modules/preparation/plans" element={<PreparationPlans />} />
+          <Route path="/modules/preparation/plans/:planId/nodes" element={<PreparationNodes />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -131,3 +133,4 @@ export default function App() {
     </div>
   );
 }
+

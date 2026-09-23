@@ -236,6 +236,9 @@ export default function PreparationPlans() {
             <p>{plan.role}{plan.scenarioId ? ` · 情境 ${plan.scenarioId}` : ""}</p>
             <p>{plan.goal}</p>
             <div className="plan-actions">
+              <Link className="plan-enter" to={`/modules/preparation/plans/${plan.id}/nodes`}>
+                进入深挖地图
+              </Link>
               <button disabled={busy} onClick={() => changeStatus(plan, "READY")}>标记为可练习</button>
               <button disabled={busy} onClick={() => changeStatus(plan, "ARCHIVED")}>归档</button>
               <button disabled={busy} onClick={() => remove(plan)}>删除</button>
@@ -247,3 +250,4 @@ export default function PreparationPlans() {
     </section>
   );
 }
+
