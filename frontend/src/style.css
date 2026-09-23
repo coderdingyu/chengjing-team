@@ -1,0 +1,350 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  font-family: "Noto Sans SC", sans-serif;
+  color: #244437;
+  background: #f7f8f2;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button,
+a {
+  outline-offset: 3px;
+}
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+  padding: 23px max(5vw, 24px);
+  border-bottom: 1px solid #e3e8dd;
+  background: #fbfcf7;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand > span {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border-radius: 11px;
+  background: #294e3d;
+  color: #f5f6e8;
+  font-family: "Noto Serif SC", serif;
+  font-size: 23px;
+}
+.brand strong {
+  font-size: 21px;
+  letter-spacing: 0.18em;
+}
+.brand small {
+  color: #8a9a87;
+  margin-left: 7px;
+  font-size: 11px;
+}
+.topbar nav {
+  display: flex;
+  gap: 24px;
+  margin-left: auto;
+  font-size: 12px;
+  color: #728372;
+}
+.topbar nav a:hover,
+.back:hover {
+  color: #2f784d;
+}
+.health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #7b927f;
+}
+.health i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9cb87b;
+}
+main {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  flex: 1;
+  padding: 58px 0 70px;
+}
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 358px;
+  padding: 55px 62px;
+  border-radius: 25px;
+  background: linear-gradient(120deg, #e3ecdb, #edf2e2 65%, #dce7d1);
+  border: 1px solid #d7e4d3;
+}
+.eyebrow {
+  display: block;
+  color: #81966d;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+}
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  font-family: "Noto Serif SC", serif;
+  font-size: clamp(33px, 4vw, 53px);
+  font-weight: 500;
+  line-height: 1.48;
+  margin: 24px 0 13px;
+  letter-spacing: -0.035em;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #64855b;
+}
+.hero p {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  color: #687c66;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.hero-link {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-top: 19px;
+  padding: 11px 17px;
+  background: #31533d;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.orb {
+  position: absolute;
+  right: 9%;
+  top: 31px;
+  width: 290px;
+  height: 290px;
+  border: 1px solid #829e7645;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #688b60;
+  font-family: "Noto Serif SC", serif;
+  font-size: 110px;
+  box-shadow:
+    0 0 0 43px #779d5610,
+    0 0 0 95px #779d5608;
+  animation: float 7s ease-in-out infinite;
+}
+@keyframes float {
+  50% {
+    transform: translateY(9px);
+  }
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  color: #6e876d;
+  margin: 38px 0 19px;
+  font-size: 12px;
+}
+.section-heading span:first-child {
+  font-weight: 600;
+  font-size: 15px;
+  color: #365943;
+}
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.module-card {
+  min-height: 225px;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border: 1px solid #e1e8dc;
+  border-radius: 16px;
+  background: #fffefa;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.module-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 13px 27px #385c3712;
+  border-color: #c7d5bb;
+}
+.module-index {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #93a888;
+}
+.module-card h2 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 22px 0 9px;
+}
+.module-card p {
+  color: #839383;
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0;
+}
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 24px;
+  font-size: 11px;
+  color: #91a088;
+}
+.card-foot span {
+  color: #527b5d;
+}
+.module-page {
+  max-width: 770px;
+  margin: 0 auto;
+}
+.back {
+  display: inline-block;
+  margin-bottom: 42px;
+  color: #6d876f;
+  font-size: 12px;
+}
+.module-page h1 {
+  font-family: "Noto Serif SC", serif;
+  font-size: 44px;
+  font-weight: 500;
+  margin: 14px 0;
+}
+.module-page > p {
+  color: #7f927e;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.feature-list {
+  margin-top: 35px;
+  border-top: 1px solid #dfe7dc;
+}
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 20px 14px;
+  border-bottom: 1px solid #dfe7dc;
+}
+.feature-row span {
+  color: #9aac9a;
+  font-size: 12px;
+}
+.feature-row strong {
+  font-weight: 500;
+  flex: 1;
+}
+.feature-row small {
+  font-size: 11px;
+  color: #9aaa94;
+}
+.footnote {
+  padding-top: 20px;
+}
+footer {
+  padding: 20px max(5vw, 24px);
+  border-top: 1px solid #e3e8dd;
+  color: #91a18f;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+}
+@media (max-width: 850px) {
+  .module-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .orb {
+    right: -110px;
+    opacity: 0.42;
+  }
+}
+@media (max-width: 590px) {
+  .topbar {
+    padding: 15px 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .brand small {
+    display: none;
+  }
+  .topbar nav {
+    gap: 13px;
+    font-size: 11px;
+  }
+  .health {
+    width: 100%;
+  }
+  main {
+    width: calc(100% - 32px);
+    padding: 30px 0 50px;
+  }
+  .hero {
+    padding: 34px 26px;
+    min-height: 320px;
+  }
+  .hero p {
+    font-size: 12px;
+  }
+  .orb {
+    width: 205px;
+    height: 205px;
+    top: 60px;
+    right: -110px;
+    font-size: 80px;
+  }
+  .section-heading {
+    flex-direction: column;
+  }
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+  .module-card {
+    min-height: 186px;
+  }
+  footer {
+    display: block;
+    font-size: 10px;
+  }
+  footer span {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    animation: none;
+  }
+  .module-card {
+    transition: none;
+  }
+}
