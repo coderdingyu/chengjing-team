@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,9 +51,45 @@ public class AuthController {
         }
     }
 
+    /** Login takes no length rule on the password: an old password must still be accepted as typed. */
+    public record LoginRequest(
+            @NotBlank(message = "请填写邮箱")
+            @Email(message = "请填写有效的邮箱地址")
+            @Size(max = 190, message = "邮箱地址过长")
+            String email,
+
+            @NotBlank(message = "请填写密码")
+            String password) {
+
+        public LoginRequest {
+            email = email == null ? null : email.trim();
+        }
+    }
+
     @PostMapping("/register")
-    public ApiResponse<AccountView> register(@Valid @RequestBody RegisterRequest request) {
+    public ApiResponse<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ApiResponse.ok(authService.register(
                 request.email(), request.password(), request.displayName()));
+    }
+
+    @PostMapping("/login")
+    public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.ok(authService.login(request.email(), request.password()));
+    }
+
+    /**
+     * Signs out the session that is calling. The token arrives as the authentication's credentials
+     * (see {@link JwtAuthFilter}), which is exactly the session to end.
+     */
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(Authentication authentication) {
+        Object credentials = authentication == null ? null : authentication.getCredentials();
+        authService.logout(credentials instanceof String token ? token : null);
+        return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<AccountView> me(@CurrentUser AuthUser caller) {
+        return ApiResponse.ok(authService.me(caller));
     }
 }

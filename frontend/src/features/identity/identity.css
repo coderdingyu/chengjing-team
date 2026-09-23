@@ -133,6 +133,50 @@
   color: #2f784d;
 }
 
+/* Top-bar session area (rendered by App.tsx). */
+.id-session {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: 20px;
+  font-size: 12px;
+  color: #728372;
+}
+
+.id-session strong {
+  color: #365943;
+  font-weight: 600;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.id-session a:hover {
+  color: #2f784d;
+}
+
+.id-session-out {
+  padding: 5px 11px;
+  border: 1px solid #d3ddcd;
+  border-radius: 7px;
+  background: #f6f8f1;
+  color: #5d7360;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.id-session-out:hover {
+  color: #2f784d;
+  border-color: #c7d5bb;
+}
+
+.id-session-out:focus-visible {
+  outline: 2px solid #527b5d;
+  outline-offset: 2px;
+}
+
 @media (max-width: 590px) {
   .id-card {
     padding: 28px 22px 24px;

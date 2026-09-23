@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { api } from "./api";
+import LoginPage from "./features/identity/LoginPage";
 import RegisterPage from "./features/identity/RegisterPage";
+import { SessionProvider, useSession } from "./features/identity/session";
+// The top bar renders the session badge, so the shell needs the identity styles too.
+import "./features/identity/identity.css";
 import { modules } from "./modules";
 
 function Home() {
@@ -84,7 +88,39 @@ function ModulePage() {
   );
 }
 
-export default function App() {
+/** Shown in the top bar: who is signed in, or the way in. */
+function SessionBadge() {
+  const navigate = useNavigate();
+  const { account, ready, signOut } = useSession();
+
+  if (!ready) return null;
+
+  if (!account) {
+    return (
+      <span className="id-session">
+        <Link to="/login">登录</Link>
+        <Link to="/register">注册</Link>
+      </span>
+    );
+  }
+
+  return (
+    <span className="id-session">
+      <strong>{account.displayName}</strong>
+      <button
+        type="button"
+        className="id-session-out"
+        onClick={() => {
+          void signOut().then(() => navigate("/"));
+        }}
+      >
+        退出
+      </button>
+    </span>
+  );
+}
+
+function Shell() {
   const [health, setHealth] = useState("后端未连接");
   useEffect(() => {
     api<{ status: string }>("/system/health")
@@ -103,7 +139,6 @@ export default function App() {
         </Link>
         <nav>
           <Link to="/">工作台</Link>
-          <Link to="/register">注册</Link>
           <a
             href="https://github.com/coderdingyu/chengjing-team"
             target="_blank"
@@ -112,6 +147,7 @@ export default function App() {
             团队仓库 ↗
           </a>
         </nav>
+        <SessionBadge />
         <span className="health">
           <i />
           {health}
@@ -120,6 +156,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -130,5 +167,13 @@ export default function App() {
         <span>先把基础做稳，再逐项接上能力。</span>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <SessionProvider>
+      <Shell />
+    </SessionProvider>
   );
 }

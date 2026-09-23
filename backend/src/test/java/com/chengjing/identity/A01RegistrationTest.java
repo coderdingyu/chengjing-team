@@ -50,24 +50,27 @@ class A01RegistrationTest {
                         .content(body("ada@example.com", PASSWORD, "Ada")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.id").isNotEmpty())
-                .andExpect(jsonPath("$.data.email").value("ada@example.com"))
-                .andExpect(jsonPath("$.data.displayName").value("Ada"))
-                .andExpect(jsonPath("$.data.createdAt").isNotEmpty());
+                .andExpect(jsonPath("$.data.user.id").isNotEmpty())
+                .andExpect(jsonPath("$.data.user.email").value("ada@example.com"))
+                .andExpect(jsonPath("$.data.user.displayName").value("Ada"))
+                .andExpect(jsonPath("$.data.user.createdAt").isNotEmpty())
+                // A02 extends registration to sign the new account in straight away.
+                .andExpect(jsonPath("$.data.token").isNotEmpty());
 
         assertThat(users.existsByEmail("ada@example.com")).isTrue();
     }
 
     @Test
-    @DisplayName("响应中不出现密码字段")
+    @DisplayName("响应中不出现任何密码字段")
     void neverReturnsPasswordFields() throws Exception {
-        String response = mvc.perform(post("/api/v1/auth/register")
+        mvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body("ada@example.com", PASSWORD, "Ada")))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        assertThat(response).doesNotContain("password").doesNotContain("passwordHash");
+                .andExpect(jsonPath("$.data.user.password").doesNotExist())
+                .andExpect(jsonPath("$.data.user.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.data.password").doesNotExist())
+                .andExpect(jsonPath("$.data.passwordHash").doesNotExist());
     }
 
     @Test
@@ -116,7 +119,7 @@ class A01RegistrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body("Ada@Example.com", PASSWORD, "Ada")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.email").value("ada@example.com"));
+                .andExpect(jsonPath("$.data.user.email").value("ada@example.com"));
 
         mvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
