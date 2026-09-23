@@ -1,0 +1,29 @@
+.preparation select, .preparation input, .preparation textarea, .preparation button {
+  font: inherit;
+  padding: .6rem .8rem;
+  border: 1px solid #64748b;
+  border-radius: .5rem;
+  background: #fff;
+  color: #243c39;
+}
+.preparation button { cursor: pointer; }
+.preparation button:disabled { cursor: progress; opacity: .6; }
+.preparation button:focus-visible, .preparation select:focus-visible, .preparation input:focus-visible, .preparation textarea:focus-visible {
+  outline: 3px solid #28776b;
+  outline-offset: 3px;
+}
+.plan-form {
+  display: grid;
+  gap: .4rem;
+  margin: 1.5rem 0;
+  max-width: 34rem;
+}
+.plan-form textarea { resize: vertical; }
+.plan-form button { justify-self: start; margin-top: .4rem; }
+.plan-alert { padding: .75rem 1rem; border: 1px solid #b45309; border-radius: .5rem; background: #fff7ed; }
+.plan-list { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; gap: 1rem; }
+.plan-list li { padding: 1.25rem; border: 1px solid #64748b; border-radius: 1rem; background: #fff; }
+.plan-list p { margin: .35rem 0; }
+.plan-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.plan-status { font-size: .85rem; padding: .15rem .55rem; border-radius: 999px; background: #e6f2ef; color: #1f5a51; }
+.plan-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
