@@ -219,6 +219,42 @@
   color: #5d7360;
 }
 
+/* Danger zone: erasing the account. */
+.id-danger {
+  border-color: #e6cdbe;
+  background: #fffdfa;
+}
+
+.id-danger .id-eyebrow {
+  color: #a8623f;
+}
+
+.id-button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.id-button-row .id-button {
+  flex: 1;
+}
+
+.id-button.danger {
+  border-color: #9a4f2c;
+  background: #9a4f2c;
+  color: #fff;
+}
+
+.id-button.danger-outline {
+  border-color: #e0c2b1;
+  color: #9a4f2c;
+  background: #fdf7f3;
+}
+
+.id-button.danger:focus-visible,
+.id-button.danger-outline:focus-visible {
+  outline-color: #9a4f2c;
+}
+
 /* Top-bar session area (rendered by App.tsx). */
 .id-session {
   display: flex;

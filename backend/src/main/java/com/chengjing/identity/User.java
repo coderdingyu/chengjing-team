@@ -50,4 +50,22 @@ public record User(
     public User withEnabled(boolean nextEnabled) {
         return new User(id, email, passwordHash, displayName, authVersion, nextEnabled, createdAt);
     }
+
+    /**
+     * The tombstone an erased account leaves behind (FR-A06).
+     *
+     * <p>One method for the whole transition, so no caller can perform half of it: the account
+     * cannot sign in ({@code enabled} false), every issued token stops resolving (version raised),
+     * and the fields that identified the person no longer do — the address is replaced so the
+     * unique-email slot is freed, and the password hash is replaced with a fresh random one so the
+     * old password is not merely disabled but gone.
+     */
+    public User erased(String anonymisedEmail, String replacementPasswordHash) {
+        return new User(
+                id, anonymisedEmail, replacementPasswordHash, ERASED_DISPLAY_NAME,
+                authVersion + 1, false, createdAt);
+    }
+
+    /** Shown wherever an erased account would otherwise have shown a name. */
+    public static final String ERASED_DISPLAY_NAME = "已注销";
 }

@@ -2,11 +2,12 @@ package com.chengjing.identity;
 
 import com.chengjing.shared.ApiException;
 import java.time.Instant;
+import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- * Reading and changing the caller's own account (FR-A03, FR-A04, FR-A05).
+ * Reading and changing the caller's own account (FR-A03, FR-A04, FR-A05, FR-A06).
  *
  * <p>Every method takes an {@link AuthUser} and looks the account up by {@code caller.id()}. No
  * method accepts an account id from the request, so "you can only read and change your own
@@ -91,4 +92,34 @@ public class AccountService {
     public AccountExport export(AuthUser caller) {
         return AccountExport.of(requireOwnAccount(caller), Instant.now());
     }
+
+    /**
+     * FR-A06: erase the caller's own account after a second confirmation.
+     *
+     * <p>Two independent things must be true, and neither is optional: the caller must restate the
+     * phrase (so an accidental or scripted call cannot delete an account) and must prove the
+     * password (so a borrowed token cannot). The phrase is checked first because it is free and
+     * settles intent before any hashing happens.
+     *
+     * <p>Scope: this clears what the identity module owns. Preparation, interview, assessment and
+     * model records belong to modules that have not merged yet — see {@link AccountExport} — so
+     * "所属数据与模型密钥" is only partly reachable today. That gap is named in the receipt rather
+     * than glossed over.
+     */
+    public ErasureReceipt erase(AuthUser caller, String currentPassword, String confirmation) {
+        if (!CONFIRMATION_PHRASE.equals(confirmation)) {
+            throw ApiException.badRequest("请输入「" + CONFIRMATION_PHRASE + "」以确认注销");
+        }
+        User account = requireOwnAccount(caller);
+        if (currentPassword == null || !encoder.matches(currentPassword, account.passwordHash())) {
+            throw ApiException.badRequest("当前密码不正确");
+        }
+        users.save(account.erased(
+                "deleted-" + account.id() + "@invalid.local",
+                encoder.encode(UUID.randomUUID().toString())));
+        return ErasureReceipt.at(Instant.now());
+    }
+
+    /** The literal the caller must restate to confirm erasure. Shown in the UI, so not a secret. */
+    public static final String CONFIRMATION_PHRASE = "注销我的账号";
 }
