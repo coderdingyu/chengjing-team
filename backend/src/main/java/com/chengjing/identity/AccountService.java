@@ -1,11 +1,12 @@
 package com.chengjing.identity;
 
 import com.chengjing.shared.ApiException;
+import java.time.Instant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
- * Reading and changing the caller's own account (FR-A03, FR-A04).
+ * Reading and changing the caller's own account (FR-A03, FR-A04, FR-A05).
  *
  * <p>Every method takes an {@link AuthUser} and looks the account up by {@code caller.id()}. No
  * method accepts an account id from the request, so "you can only read and change your own
@@ -78,5 +79,16 @@ public class AccountService {
     public void logoutEverywhere(AuthUser caller) {
         User account = requireOwnAccount(caller);
         users.save(account.withAuthVersionRaised());
+    }
+
+    /**
+     * FR-A05: a copy of the caller's own data.
+     *
+     * <p>Scoped to what this module owns. The preparation, interview, assessment and model records
+     * belong to other modules and are not reachable from here; {@link AccountExport} names them so
+     * the file is not mistaken for a complete export.
+     */
+    public AccountExport export(AuthUser caller) {
+        return AccountExport.of(requireOwnAccount(caller), Instant.now());
     }
 }

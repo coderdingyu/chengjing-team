@@ -35,6 +35,10 @@ export default function AccountPage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
 
+  const [exportError, setExportError] = useState("");
+  const [exportMessage, setExportMessage] = useState("");
+  const [exportBusy, setExportBusy] = useState(false);
+
   // Keep the field in step with the account the session holds.
   useEffect(() => {
     if (account) setDisplayName(account.displayName);
@@ -108,6 +112,30 @@ export default function AccountPage() {
     navigate("/login", { state: { notice: "已退出所有设备，请重新登录。" } });
   }
 
+  async function exportData() {
+    setExportBusy(true);
+    setExportError("");
+    setExportMessage("");
+    try {
+      // The server returns the document in the shared envelope; saving it is the client's job.
+      const data = await api<unknown>("/account/export");
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `澄镜-个人数据-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportMessage("已开始下载。文件含你的个人资料，请保存在你信任的位置。");
+    } catch (e) {
+      setExportError((e as Error).message);
+    } finally {
+      setExportBusy(false);
+    }
+  }
+
   return (
     <div className="id-stack">
       <section className="id-card id-account">
@@ -155,6 +183,37 @@ export default function AccountPage() {
             {profileBusy ? "正在保存…" : "保存资料"}
           </button>
         </form>
+      </section>
+
+      <section className="id-card id-account">
+        <span className="id-eyebrow">CHENGJING · 我的数据</span>
+        <h2 className="id-section-title">导出我的数据</h2>
+        <p className="id-lede">
+          下载一份属于你自己的副本，包含账号资料。导出文件里不含密码、登录令牌或模型密钥。
+        </p>
+        <p className="id-fineprint id-fineprint-block">
+          准备计划、面试记录与评分由其他模块保存，本轮尚未接入导出；文件里的
+          <code> notIncludedYet </code>
+          会列出当前未包含的部分，不会假装完整。
+        </p>
+        {exportMessage && (
+          <p className="id-notice" role="status">
+            {exportMessage}
+          </p>
+        )}
+        {exportError && (
+          <p className="id-error" role="alert">
+            {exportError}
+          </p>
+        )}
+        <button
+          className="id-button"
+          type="button"
+          disabled={exportBusy}
+          onClick={() => void exportData()}
+        >
+          {exportBusy ? "正在准备…" : "导出我的数据"}
+        </button>
       </section>
 
       <section className="id-card id-account">
