@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../api";
 import { useSession, type Account } from "./session";
 import "./identity.css";
@@ -7,6 +7,8 @@ import "./identity.css";
 export default function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useSession();
+  // Set when a password change or a global sign-out sends the user back here.
+  const notice = (useLocation().state as { notice?: string } | null)?.notice;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,6 +39,11 @@ export default function LoginPage() {
       <span className="id-eyebrow">CHENGJING · 账号</span>
       <h1>欢迎回来</h1>
       <p className="id-lede">用注册时的邮箱和密码继续你的准备与练习。</p>
+      {notice && (
+        <p className="id-notice" role="status">
+          {notice}
+        </p>
+      )}
       <form className="id-form" onSubmit={submit} noValidate>
         <label className="id-field">
           <span>邮箱</span>
