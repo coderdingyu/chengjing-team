@@ -4,32 +4,24 @@ import { api } from "../../api";
 import { useSession, type Account } from "./session";
 import "./identity.css";
 
-/** Client-side mirror of PasswordRules, so the field can explain the rule before the round trip. */
-const PASSWORD_MIN = 8;
-const PASSWORD_MAX = 64;
-
-export default function RegisterPage() {
+export default function LoginPage() {
   const navigate = useNavigate();
   const { signIn } = useSession();
-  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const tooShort = password.length > 0 && password.length < PASSWORD_MIN;
-  const canSubmit =
-    !busy && displayName.trim() !== "" && email.trim() !== "" && !tooShort;
+  const canSubmit = !busy && email.trim() !== "" && password !== "";
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError("");
     try {
-      // The server normalises the address and is the authority on every rule here.
-      const result = await api<{ token: string; user: Account }>("/auth/register", {
+      const result = await api<{ token: string; user: Account }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password, displayName }),
+        body: JSON.stringify({ email, password }),
       });
       signIn(result.token, result.user);
       navigate("/");
@@ -43,21 +35,9 @@ export default function RegisterPage() {
   return (
     <div className="id-card">
       <span className="id-eyebrow">CHENGJING · 账号</span>
-      <h1>创建你的账号</h1>
-      <p className="id-lede">
-        注册后即可保存准备计划、面试记录与复盘。我们只保存密码的哈希，不保存明文。
-      </p>
+      <h1>欢迎回来</h1>
+      <p className="id-lede">用注册时的邮箱和密码继续你的准备与练习。</p>
       <form className="id-form" onSubmit={submit} noValidate>
-        <label className="id-field">
-          <span>你的称呼</span>
-          <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            maxLength={80}
-            autoComplete="name"
-            required
-          />
-        </label>
         <label className="id-field">
           <span>邮箱</span>
           <input
@@ -75,29 +55,21 @@ export default function RegisterPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            maxLength={PASSWORD_MAX}
-            autoComplete="new-password"
-            aria-describedby="id-password-rule"
+            autoComplete="current-password"
             required
           />
         </label>
-        <p
-          id="id-password-rule"
-          className={tooShort ? "id-hint invalid" : "id-hint"}
-        >
-          {PASSWORD_MIN}—{PASSWORD_MAX} 位。多字节字符请适当缩短。
-        </p>
         {error && (
           <p className="id-error" role="alert">
             {error}
           </p>
         )}
         <button className="id-button primary" disabled={!canSubmit} type="submit">
-          {busy ? "正在创建…" : "创建账号"}
+          {busy ? "正在登录…" : "登录"}
         </button>
       </form>
       <p className="id-fineprint">
-        已有账号？<Link to="/login">去登录</Link>
+        还没有账号？<Link to="/register">去注册</Link>
       </p>
     </div>
   );

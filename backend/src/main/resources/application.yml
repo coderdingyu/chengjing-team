@@ -4,3 +4,14 @@ server:
 spring:
   application:
     name: chengjing-team
+
+chengjing:
+  identity:
+    jwt:
+      # Local development default only — never a real deployment secret. Set JWT_SECRET in the
+      # environment for anything reachable by others; E06 owns the deployment configuration.
+      # Must be at least 32 bytes; TokenService refuses to start with a shorter key.
+      secret: ${JWT_SECRET:chengjing-team-local-dev-secret-change-me}
+      # Short-lived on purpose (FR-A02). Signing out, changing the password and erasing the account
+      # all end sessions sooner than this; the TTL is the backstop, not the only control.
+      expire-minutes: ${JWT_EXPIRE_MINUTES:120}
