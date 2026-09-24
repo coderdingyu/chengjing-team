@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { api } from "./api";
+import AccountPage from "./features/identity/AccountPage";
 import LoginPage from "./features/identity/LoginPage";
 import RegisterPage from "./features/identity/RegisterPage";
 import { SessionProvider, useSession } from "./features/identity/session";
@@ -106,7 +107,9 @@ function SessionBadge() {
 
   return (
     <span className="id-session">
-      <strong>{account.displayName}</strong>
+      <Link to="/account" className="id-session-name">
+        {account.displayName}
+      </Link>
       <button
         type="button"
         className="id-session-out"
@@ -158,6 +161,7 @@ function Shell() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

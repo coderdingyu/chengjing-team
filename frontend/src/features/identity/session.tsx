@@ -24,6 +24,8 @@ type SessionValue = {
   ready: boolean;
   signIn: (nextToken: string, nextAccount: Account) => void;
   signOut: () => Promise<void>;
+  /** Replaces the cached account after the server accepted a change, so the top bar updates too. */
+  updateAccount: (nextAccount: Account) => void;
 };
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -65,9 +67,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setAccount(null);
   }, []);
 
+  const updateAccount = useCallback((nextAccount: Account) => {
+    setAccount(nextAccount);
+  }, []);
+
   const value = useMemo(
-    () => ({ account, ready, signIn, signOut }),
-    [account, ready, signIn, signOut],
+    () => ({ account, ready, signIn, signOut, updateAccount }),
+    [account, ready, signIn, signOut, updateAccount],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

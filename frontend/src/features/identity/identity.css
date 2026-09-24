@@ -133,6 +133,49 @@
   color: #2f784d;
 }
 
+/* Account page: read-only facts above the editable field. */
+.id-account {
+  width: min(520px, 100%);
+}
+
+.id-facts {
+  margin: 0 0 26px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid #e8ede3;
+  display: grid;
+  gap: 13px;
+}
+
+.id-facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.id-facts dt {
+  flex: 0 0 4.5em;
+  color: #91a088;
+  font-size: 12px;
+}
+
+.id-facts dd {
+  margin: 0;
+  color: #365943;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.id-notice {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #cfe0c6;
+  border-radius: 9px;
+  background: #f2f8ed;
+  color: #3d6b45;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
 /* Top-bar session area (rendered by App.tsx). */
 .id-session {
   display: flex;
@@ -143,13 +186,17 @@
   color: #728372;
 }
 
-.id-session strong {
+.id-session-name {
   color: #365943;
   font-weight: 600;
   max-width: 12ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.id-session-name:hover {
+  color: #2f784d;
 }
 
 .id-session a:hover {

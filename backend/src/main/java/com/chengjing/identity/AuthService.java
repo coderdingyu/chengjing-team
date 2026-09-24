@@ -17,6 +17,7 @@ public class AuthService {
     private final UserStore users;
     private final PasswordEncoder encoder;
     private final TokenService tokens;
+    private final AccountService accounts;
 
     /**
      * A hash of a throwaway value, used to keep sign-in timing even when the address is unknown.
@@ -26,10 +27,12 @@ public class AuthService {
      */
     private final String timingEqualiserHash;
 
-    public AuthService(UserStore users, PasswordEncoder encoder, TokenService tokens) {
+    public AuthService(
+            UserStore users, PasswordEncoder encoder, TokenService tokens, AccountService accounts) {
         this.users = users;
         this.encoder = encoder;
         this.tokens = tokens;
+        this.accounts = accounts;
         this.timingEqualiserHash = encoder.encode(UUID.randomUUID().toString());
     }
 
@@ -78,12 +81,12 @@ public class AuthService {
     /**
      * FR-A03: the caller's own account, re-read from the store so a rename is reflected at once
      * rather than only in tokens issued afterwards.
+     *
+     * <p>Delegates to {@link AccountService} so "load my own enabled account" has one definition;
+     * {@code /auth/me} and {@code /account} therefore cannot drift apart.
      */
     public AccountView me(AuthUser caller) {
-        return users.findById(caller.id())
-                .filter(User::enabled)
-                .map(AccountView::of)
-                .orElseThrow(() -> ApiException.unauthorized("账号不存在或已停用"));
+        return accounts.profile(caller);
     }
 
     private TokenResponse signedIn(User user) {
