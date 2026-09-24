@@ -8,6 +8,12 @@ import "./identity.css";
 const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 64;
 
+/**
+ * Must match AccountService.CONFIRMATION_PHRASE on the server, which is the authority: the phrase
+ * is checked there too, so a caller cannot erase an account without restating it.
+ */
+const ERASE_PHRASE = "注销我的账号";
+
 /** Formats the server's ISO timestamp for display; falls back to the raw value if unparsable. */
 function formatCreatedAt(value: string): string {
   const parsed = new Date(value);
@@ -38,6 +44,12 @@ export default function AccountPage() {
   const [exportError, setExportError] = useState("");
   const [exportMessage, setExportMessage] = useState("");
   const [exportBusy, setExportBusy] = useState(false);
+
+  const [eraseOpen, setEraseOpen] = useState(false);
+  const [erasePassword, setErasePassword] = useState("");
+  const [eraseConfirm, setEraseConfirm] = useState("");
+  const [eraseError, setEraseError] = useState("");
+  const [eraseBusy, setEraseBusy] = useState(false);
 
   // Keep the field in step with the account the session holds.
   useEffect(() => {
@@ -133,6 +145,29 @@ export default function AccountPage() {
       setExportError((e as Error).message);
     } finally {
       setExportBusy(false);
+    }
+  }
+
+  async function eraseAccount(event: FormEvent) {
+    event.preventDefault();
+    setEraseBusy(true);
+    setEraseError("");
+    try {
+      await api("/account", {
+        method: "DELETE",
+        body: JSON.stringify({
+          currentPassword: erasePassword,
+          confirmation: eraseConfirm,
+        }),
+      });
+      // The account is gone; drop the local session and say so on the way out.
+      await signOut();
+      navigate("/login", {
+        state: { notice: "账号已注销，活跃存储中的账号数据已清除。" },
+      });
+    } catch (e) {
+      setEraseError((e as Error).message);
+      setEraseBusy(false);
     }
   }
 
@@ -290,6 +325,77 @@ export default function AccountPage() {
         >
           退出所有设备
         </button>
+      </section>
+
+      <section className="id-card id-account id-danger">
+        <span className="id-eyebrow">CHENGJING · 注销账号</span>
+        <h2 className="id-section-title">注销我的账号</h2>
+        <p className="id-lede">
+          清除活跃存储中的账号数据，并立即结束所有设备上的登录。此操作不可撤销。
+          建议先导出你的数据。
+        </p>
+        <p className="id-fineprint id-fineprint-block">
+          此前产生的备份由部署方按其保留周期到期清理，备份中的数据不会出现在任何接口里。
+        </p>
+
+        {eraseOpen ? (
+          <form className="id-form" onSubmit={eraseAccount} noValidate>
+            <label className="id-field">
+              <span>当前密码</span>
+              <input
+                type="password"
+                value={erasePassword}
+                onChange={(e) => setErasePassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </label>
+            <label className="id-field">
+              <span>
+                输入「{ERASE_PHRASE}」以确认
+              </span>
+              <input
+                value={eraseConfirm}
+                onChange={(e) => setEraseConfirm(e.target.value)}
+                required
+              />
+            </label>
+            {eraseError && (
+              <p className="id-error" role="alert">
+                {eraseError}
+              </p>
+            )}
+            <div className="id-button-row">
+              <button
+                className="id-button"
+                type="button"
+                onClick={() => {
+                  setEraseOpen(false);
+                  setEraseError("");
+                }}
+              >
+                取消
+              </button>
+              <button
+                className="id-button danger"
+                type="submit"
+                disabled={
+                  eraseBusy || eraseConfirm !== ERASE_PHRASE || erasePassword === ""
+                }
+              >
+                {eraseBusy ? "正在注销…" : "确认注销并删除"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            className="id-button danger-outline"
+            type="button"
+            onClick={() => setEraseOpen(true)}
+          >
+            查看注销确认
+          </button>
+        )}
       </section>
 
       <p className="id-fineprint id-stack-foot">

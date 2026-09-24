@@ -4,6 +4,7 @@ import com.chengjing.shared.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -84,5 +85,30 @@ public class AccountController {
     @GetMapping("/export")
     public ApiResponse<AccountExport> export(@CurrentUser AuthUser caller) {
         return ApiResponse.ok(accountService.export(caller));
+    }
+
+    /**
+     * FR-A06: both a restated confirmation phrase and the current password are required.
+     *
+     * <p>{@code confirmation} deliberately carries no {@code @NotBlank}: a blank value is just one
+     * more wrong value, and {@link AccountService#erase} answers every wrong value with the phrase
+     * the caller was supposed to type. A bean-validation message here would only be vaguer.
+     *
+     * <p>The body is carried on DELETE rather than moved to a POST: erasing is a deletion, and the
+     * phrase plus password are the request's subject matter, not a query. Clients that strip DELETE
+     * bodies (some proxies do) would need a POST variant, which is worth adding only if one turns up.
+     */
+    public record EraseRequest(
+            @NotBlank(message = "请填写当前密码")
+            String currentPassword,
+
+            String confirmation) {
+    }
+
+    @DeleteMapping
+    public ApiResponse<ErasureReceipt> erase(
+            @CurrentUser AuthUser caller, @Valid @RequestBody EraseRequest request) {
+        return ApiResponse.ok(
+                accountService.erase(caller, request.currentPassword(), request.confirmation()));
     }
 }
