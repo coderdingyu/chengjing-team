@@ -176,6 +176,36 @@
   line-height: 1.7;
 }
 
+/* Account page stacks profile and security cards. */
+.id-stack {
+  width: min(520px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.id-stack .id-card {
+  width: 100%;
+}
+
+.id-stack-foot {
+  margin: 0;
+  text-align: center;
+}
+
+.id-section-title {
+  font-family: "Noto Serif SC", serif;
+  font-size: 21px;
+  font-weight: 500;
+  margin: 14px 0 8px;
+}
+
+.id-divider {
+  height: 1px;
+  margin: 28px 0 4px;
+  background: #e8ede3;
+}
+
 /* Top-bar session area (rendered by App.tsx). */
 .id-session {
   display: flex;
