@@ -1,0 +1,146 @@
+/* Member A · 账号与隐私. Scoped to the identity feature so the shared style.css stays untouched. */
+
+.id-card {
+  width: min(460px, 100%);
+  margin: 0 auto;
+  padding: 40px 42px 34px;
+  border: 1px solid #e1e8dc;
+  border-radius: 18px;
+  background: #fffefa;
+}
+
+.id-eyebrow {
+  display: block;
+  color: #81966d;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+}
+
+.id-card h1 {
+  font-family: "Noto Serif SC", serif;
+  font-size: 31px;
+  font-weight: 500;
+  margin: 16px 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.id-lede {
+  color: #7f927e;
+  font-size: 13px;
+  line-height: 1.85;
+  margin: 0 0 26px;
+}
+
+.id-lede strong {
+  color: #365943;
+  font-weight: 600;
+}
+
+.id-form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.id-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.id-field > span {
+  font-size: 12px;
+  color: #5d7360;
+}
+
+.id-field input {
+  padding: 11px 13px;
+  border: 1px solid #d8e2d3;
+  border-radius: 9px;
+  background: #fdfdf8;
+  color: #244437;
+  font: inherit;
+  font-size: 14px;
+}
+
+.id-field input:focus-visible {
+  outline: 2px solid #527b5d;
+  outline-offset: 1px;
+  border-color: #527b5d;
+}
+
+.id-hint {
+  margin: -8px 0 0;
+  font-size: 11px;
+  color: #91a088;
+}
+
+.id-hint.invalid {
+  color: #a8623f;
+}
+
+.id-error {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #e6cdbe;
+  border-radius: 9px;
+  background: #fdf4ef;
+  color: #9a4f2c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.id-button {
+  padding: 12px 18px;
+  border: 1px solid #d3ddcd;
+  border-radius: 9px;
+  background: #f6f8f1;
+  color: #365943;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.id-button.primary {
+  border-color: #31533d;
+  background: #31533d;
+  color: #fff;
+}
+
+.id-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.id-button:focus-visible {
+  outline: 2px solid #527b5d;
+  outline-offset: 2px;
+}
+
+.id-fineprint {
+  margin: 22px 0 0;
+  font-size: 12px;
+  color: #91a088;
+}
+
+.id-fineprint a {
+  color: #527b5d;
+  text-decoration: underline;
+}
+
+.id-fineprint a:hover {
+  color: #2f784d;
+}
+
+@media (max-width: 590px) {
+  .id-card {
+    padding: 28px 22px 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .id-button {
+    transition: none;
+  }
+}
