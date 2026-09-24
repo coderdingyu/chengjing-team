@@ -74,4 +74,15 @@ public class AccountController {
         accountService.logoutEverywhere(caller);
         return ApiResponse.ok(null);
     }
+
+    /**
+     * FR-A05: download a copy of your own data.
+     *
+     * <p>Returns the document in the shared envelope rather than as a file attachment, so the
+     * client decides how to save it and the response is still readable in a browser or a test.
+     */
+    @GetMapping("/export")
+    public ApiResponse<AccountExport> export(@CurrentUser AuthUser caller) {
+        return ApiResponse.ok(accountService.export(caller));
+    }
 }

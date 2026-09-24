@@ -206,6 +206,19 @@
   background: #e8ede3;
 }
 
+.id-fineprint-block {
+  margin: 0 0 18px;
+  line-height: 1.8;
+}
+
+.id-fineprint-block code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f1f4ec;
+  font-size: 11px;
+  color: #5d7360;
+}
+
 /* Top-bar session area (rendered by App.tsx). */
 .id-session {
   display: flex;
