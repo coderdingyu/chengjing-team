@@ -36,7 +36,7 @@ public class EvidenceScoringService {
         validateAnswer(answer);
         ScoreRubric rubric = rubricService.current();
         CandidateReview candidate = modelPort.score(new ScoringPrompt(
-                answer.roleKey(), answer.questionText(), answer.answerText(), rubric));
+                answer.userId(), answer.roleKey(), answer.questionText(), answer.answerText(), rubric));
         return validateCandidate(answer, candidate, rubric.version(), Instant.now(clock));
     }
 

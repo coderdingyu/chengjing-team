@@ -1,6 +1,6 @@
-# 澄镜 · 五人协作版骨架
+# 澄镜 · 五人协作版
 
-这是从[现有澄镜系统](https://github.com/coderdingyu/chengjing)拆出的**可运行起点**，使用 React 18 + TypeScript + Vite、Spring Boot 3.4 + Java 17。当前只有首页、五个模块的待实现页面、统一 API 返回格式、后端健康接口和构建检查。它并不声称已经有登录、面试或评分能力。
+这是从[现有澄镜系统](https://github.com/coderdingyu/chengjing)拆出的五人协作仓库，使用 React 18 + TypeScript + Vite、Spring Boot 3.4 + Java 17。功能按编号逐项提交；模块是否已可用，以对应 PR、测试和 [30 项功能分工](docs/30项功能分工.md) 的验收记录为准。不要把尚未合并的模块视为已完成。
 
 团队按 [30 项功能分工](docs/30项功能分工.md) 各实现 6 项，每项对应一次由实际开发者完成的功能提交。负责人先上传的骨架提交不计入这 30 次。旧系统是实现参考，不直接整包复制，以便每项都有明确的代码和验收结果。
 
@@ -22,6 +22,8 @@
 
 需要 Java 17、Node.js 22 与 npm。**骨架端口是 8081 和 5173**，可与原系统的 8080 同时运行。
 
+Windows 上可直接双击 [启动团队版.cmd](启动团队版.cmd)，脚本会安装依赖、运行测试、构建并检查前后端是否启动成功。停止时双击 [停止团队版.cmd](停止团队版.cmd)。详细的本机备份、恢复与服务器迁移见 [部署文档](docs/本机运行与服务器迁移.md)。
+
 ```powershell
 cd backend
 .\mvnw.cmd -s .mvn/settings.xml spring-boot:run
@@ -36,6 +38,8 @@ npm run dev
 ```
 
 浏览器打开 http://127.0.0.1:5173 。后端健康接口是 http://127.0.0.1:8081/api/v1/system/health 。提交前在 `frontend` 目录运行 `npm run build`，在 `backend` 目录运行 `.\mvnw.cmd -s .mvn/settings.xml test`。GitHub Actions 也会运行这两项检查。
+
+平台模块提供模型配置、传统语音练习和原生 Live 页面。模型配置、Live 票据依赖 A02 的已登录用户；若 A02 尚未合并，页面会明确要求登录。文本模型调用使用用户选择的连接；Step 5 Preview 是文本模型，Live 需单独配置 StepAudio 3 Realtime。原始麦克风音频不写入数据库。
 
 ## 开发规则
 
