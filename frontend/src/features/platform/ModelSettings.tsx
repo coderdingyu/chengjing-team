@@ -52,6 +52,14 @@ export default function ModelSettings() {
     } catch (error) { setMessage((error as Error).message); }
   };
 
+  const testConnection = async (purpose: string) => {
+    setMessage("正在检测模型连接…");
+    try {
+      const result = await modelApi<{ status: string; model: string }>(`/models/test/${purpose}`, { method: "POST" });
+      setMessage(`${result.model} 已响应，${purpose === "grading" ? "评分" : "对话"}通道可用。`);
+    } catch (error) { setMessage((error as Error).message); }
+  };
+
   const remove = async (profile: Profile) => {
     if (!window.confirm(`删除「${profile.name}」及其用途绑定？`)) return;
     try { await modelApi(`/models/${profile.id}`, { method: "DELETE" }); await reload(); }
@@ -87,7 +95,7 @@ export default function ModelSettings() {
           <div><button type="button" onClick={() => { setEditing(profile.id); setForm({ ...profile, apiKey: "" }); }}>编辑</button><button type="button" onClick={() => void remove(profile)}>删除</button></div>
         </div>)}
         <h2>03 / 能力路由</h2>
-        {purposes.map(([purpose, label]) => <label className="model-route" key={purpose}>{label}<select value={settings?.routes[purpose] ?? ""} onChange={(e) => void changeRoute(purpose, e.target.value)}><option value="">未指定</option>{settings?.profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label>)}
+        {purposes.map(([purpose, label]) => <div className="model-route-row" key={purpose}><label className="model-route">{label}<select value={settings?.routes[purpose] ?? ""} onChange={(e) => void changeRoute(purpose, e.target.value)}><option value="">未指定</option>{settings?.profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label>{(purpose === "dialogue" || purpose === "grading") && <button type="button" disabled={!settings?.routes[purpose]} onClick={() => void testConnection(purpose)}>检测</button>}</div>)}
       </section>
     </div>
   </div>;

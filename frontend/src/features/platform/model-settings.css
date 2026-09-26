@@ -17,4 +17,7 @@
 .saved-profile span, .saved-profile small { color: #9fb3bc; overflow-wrap: anywhere; }
 .saved-profile div { display: flex; gap: 8px; }
 .model-route { margin: 12px 0; }
+.model-route-row { display: grid; grid-template-columns: 1fr auto; gap: 9px; align-items: end; }
+.model-route-row > button { margin-bottom: 12px; border: 1px solid #719b93; border-radius: 11px; padding: 11px; color: #d2f4e9; background: transparent; cursor: pointer; }
+.model-route-row > button:disabled { opacity: .45; cursor: default; }
 @media (max-width: 780px) { .model-layout { grid-template-columns: 1fr; } }
