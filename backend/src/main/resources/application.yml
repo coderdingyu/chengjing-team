@@ -4,3 +4,9 @@ server:
 spring:
   application:
     name: chengjing-team
+  datasource:
+    url: ${CHENGJING_DB_URL:jdbc:h2:file:./data/chengjing;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${CHENGJING_DB_USER:sa}
+    password: ${CHENGJING_DB_PASSWORD:}
+  flyway:
+    enabled: true
