@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api";
 import { modules } from "./modules";
+import ModelSettings from "./features/platform/ModelSettings";
 
 function Home() {
   return (
@@ -76,6 +77,7 @@ function ModulePage() {
           </div>
         ))}
       </div>
+      {item.id === "platform" && <Link className="hero-link" to="/settings/models">打开模型配置 →</Link>}
       <p className="footnote">
         每项的接口、旧系统代码位置和验收条件见仓库 docs/30项功能分工.md。
       </p>
@@ -119,6 +121,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
+          <Route path="/settings/models" element={<ModelSettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

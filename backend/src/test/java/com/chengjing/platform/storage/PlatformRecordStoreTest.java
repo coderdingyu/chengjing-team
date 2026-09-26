@@ -16,7 +16,7 @@ class PlatformRecordStoreTest {
         var url = "jdbc:h2:file:" + file.toAbsolutePath().toString().replace('\\', '/') + ";DB_CLOSE_ON_EXIT=FALSE";
         var dataSource = new DriverManagerDataSource(url, "sa", "");
         var flyway = Flyway.configure().dataSource(dataSource).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
         var mapper = new ObjectMapper();
         var first = new PlatformRecordStore(new JdbcTemplate(dataSource), mapper);
         for (var kind : new String[]{"account", "preparation", "interview", "assessment"})
