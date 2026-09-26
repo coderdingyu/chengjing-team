@@ -87,8 +87,10 @@ public class ModelProfileService {
             Row row = owned(ownerId, profileId);
             if ("voice".equals(purpose) && !"stepfun".equals(row.provider))
                 throw new PlatformException(HttpStatus.BAD_REQUEST, "传统语音当前只支持阶跃配置");
-            if ("live".equals(purpose) && !row.model.toLowerCase().contains("realtime"))
-                throw new PlatformException(HttpStatus.BAD_REQUEST, "Live 请选择实时语音模型");
+            if ("live".equals(purpose) && !("stepfun".equals(row.provider)
+                    && "https://api.stepfun.com/v1".equals(row.baseUrl)
+                    && "stepaudio-3-realtime-preview".equals(row.model)))
+                throw new PlatformException(HttpStatus.BAD_REQUEST, "Live 目前仅支持阶跃官方 StepAudio 3 Realtime 配置");
             if (Set.of("dialogue", "grading").contains(purpose) && row.model.toLowerCase().contains("realtime"))
                 throw new PlatformException(HttpStatus.BAD_REQUEST, "文本用途请选择文本模型");
         }

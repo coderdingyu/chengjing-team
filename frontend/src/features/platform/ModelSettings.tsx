@@ -77,7 +77,7 @@ export default function ModelSettings() {
         <h2>01 / 新建连接</h2>
         <div className="preset-list">{(settings?.presets ?? []).map((preset) =>
           <button key={preset.id} type="button" className={form.provider === preset.id ? "selected" : ""} onClick={() => choosePreset(preset)}>{preset.name}</button>
-        )}</div>
+        )}<button type="button" onClick={() => { setEditing(null); setForm({ name: "阶跃 Live", provider: "stepfun", baseUrl: "https://api.stepfun.com/v1", model: "stepaudio-3-realtime-preview", apiKey: "" }); }}>阶跃 Live</button></div>
         <form onSubmit={save} className="model-form">
           <label>配置名称<input value={form.name} maxLength={80} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
           <label>API 根地址<input value={form.baseUrl} type="url" placeholder="https://example.com/v1" onChange={(e) => setForm({ ...form, baseUrl: e.target.value })} required /></label>

@@ -13,3 +13,5 @@ spring:
 chengjing:
   secrets:
     key-file: ${CHENGJING_MASTER_KEY_FILE:./data/master.key}
+  live:
+    allowed-origins: ${CHENGJING_ALLOWED_ORIGINS:http://127.0.0.1:5173,http://localhost:5173}
