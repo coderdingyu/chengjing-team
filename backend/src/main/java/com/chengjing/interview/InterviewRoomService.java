@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
  * C01 — create and reopen a complete interview room.
  * C02 — store a text answer, keep the transcript in order and make repeated submissions idempotent.
  * C03 — answer clarification / replay / thinking requests without turning them into scored answers.
+ * C04 — keep a restorable draft and control the room's clock (pause / resume / finish).
  *
  * Acceptance:
  * <ul>
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
  *   <li>submitting an answer leaves ordered question/answer records and never stores two answers for
  *       one request, and candidate text is stored as data rather than obeyed as an instruction;</li>
  *   <li>each of the three intent requests gets a clear response, and clarify/replay never create an
- *       answer that member D could score.</li>
+ *       answer that member D could score;</li>
+ *   <li>an unsent draft survives a refresh; a paused room stops counting time and refuses answers;
+ *       ending the room is terminal and hands the candidate to the review page.</li>
  * </ul>
  */
 @Service
@@ -55,6 +58,10 @@ public class InterviewRoomService {
 
     /** Request body of {@code POST /api/v1/interviews/{id}/requests}. */
     public record IntentRequest(String requestId, String questionId, String intent) {
+    }
+
+    /** Request body of {@code PUT /api/v1/interviews/{id}/draft}. */
+    public record DraftRequest(String text) {
     }
 
     /**
@@ -116,6 +123,63 @@ public class InterviewRoomService {
     }
 
     /**
+     * C04 — stores the answer text that has not been submitted yet.
+     *
+     * Keeping the draft on the room (not only in the browser) is what makes "刷新可恢复" true across
+     * devices and across a cleared cache. It is allowed while paused, because pausing to think is
+     * exactly when a draft matters.
+     */
+    public Map<String, Object> saveDraft(String roomId, DraftRequest request) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        String text = request.text() == null ? "" : request.text();
+        if (text.length() > MAX_ANSWER_LENGTH) {
+            throw InterviewException.badRequest("草稿最多 8000 字");
+        }
+        synchronized (room) {
+            if (InterviewRoom.COMPLETED.equals(room.status())) {
+                throw InterviewException.conflict("本场面试已结束，不能再保存草稿");
+            }
+            room.setDraft(text);
+            return view(room);
+        }
+    }
+
+    /** C04 — freezes the clock. No answer is accepted until the room resumes. */
+    public Map<String, Object> pause(String roomId) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        synchronized (room) {
+            if (InterviewRoom.COMPLETED.equals(room.status())) {
+                throw InterviewException.conflict("本场面试已结束");
+            }
+            room.pause();
+            return view(room);
+        }
+    }
+
+    /** C04 — restarts the clock from where it was paused. */
+    public Map<String, Object> resume(String roomId) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        synchronized (room) {
+            if (InterviewRoom.COMPLETED.equals(room.status())) {
+                throw InterviewException.conflict("本场面试已结束");
+            }
+            room.resume();
+            return view(room);
+        }
+    }
+
+    /** C04 — ends the interview. The user then goes to the review page. */
+    public Map<String, Object> finish(String roomId) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        synchronized (room) {
+            if (!InterviewRoom.COMPLETED.equals(room.status())) {
+                room.finish(Instant.now());
+            }
+            return view(room);
+        }
+    }
+
+    /**
      * Records a text answer and the interviewer's acknowledgement.
      *
      * The whole request is applied at most once: a repeated {@code requestId} returns the transcript
@@ -166,6 +230,8 @@ public class InterviewRoomService {
                     Instant.now());
             room.answers().add(answer);
             room.rememberRequest(requestId);
+            // The text is now an answer; a stale draft would reappear on the next refresh.
+            room.setDraft("");
 
             InterviewTurn candidate = new InterviewTurn(
                     answer.id(),
@@ -348,6 +414,9 @@ public class InterviewRoomService {
                 "material", stage.material()));
         view.put("turns", transcript(room));
         view.put("answers", withRoomLock(room, () -> room.answers().stream().map(this::view).toList()));
+        view.put("draft", room.draft());
+        view.put("elapsedSeconds", room.elapsedSeconds());
+        view.put("endedAt", room.endedAt() == null ? null : room.endedAt().toString());
         view.put("createdAt", room.createdAt().toString());
         return view;
     }

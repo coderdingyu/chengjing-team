@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,5 +58,30 @@ public class InterviewRoomController {
     public ApiResponse<Map<String, Object>> submitIntent(@PathVariable String id,
                                                          @RequestBody InterviewRoomService.IntentRequest request) {
         return ApiResponse.ok(service.submitIntent(id, request));
+    }
+
+    /** C04 — autosave the unsent answer text so a refresh can restore it. */
+    @PutMapping("/{id}/draft")
+    public ApiResponse<Map<String, Object>> saveDraft(@PathVariable String id,
+                                                      @RequestBody InterviewRoomService.DraftRequest request) {
+        return ApiResponse.ok(service.saveDraft(id, request));
+    }
+
+    /** C04 — freeze the clock. */
+    @PostMapping("/{id}/pause")
+    public ApiResponse<Map<String, Object>> pause(@PathVariable String id) {
+        return ApiResponse.ok(service.pause(id));
+    }
+
+    /** C04 — restart the clock. */
+    @PostMapping("/{id}/resume")
+    public ApiResponse<Map<String, Object>> resume(@PathVariable String id) {
+        return ApiResponse.ok(service.resume(id));
+    }
+
+    /** C04 — end the interview; the candidate goes on to the review page. */
+    @PostMapping("/{id}/finish")
+    public ApiResponse<Map<String, Object>> finish(@PathVariable String id) {
+        return ApiResponse.ok(service.finish(id));
     }
 }

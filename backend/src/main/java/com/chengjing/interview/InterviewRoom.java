@@ -1,5 +1,6 @@
 package com.chengjing.interview;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -44,6 +45,9 @@ public class InterviewRoom {
     private int stageIndex;
     private int followUps;
     private int turnSeq;
+    /** Unsent answer text, kept so a refresh does not lose what the candidate was writing (C04). */
+    private String draft = "";
+    /** Seconds already banked; the live part is added while the room is ACTIVE. */
     private long elapsedSeconds;
     private Instant activeSince = Instant.now();
     private Instant stageStartedAt = Instant.now();
@@ -175,19 +179,40 @@ public class InterviewRoom {
     }
 
     public long elapsedSeconds() {
+        if (ACTIVE.equals(status)) {
+            return elapsedSeconds + Duration.between(activeSince, Instant.now()).getSeconds();
+        }
         return elapsedSeconds;
     }
 
-    void setElapsedSeconds(long elapsedSeconds) {
-        this.elapsedSeconds = elapsedSeconds;
+    /** Stops the clock and marks the room paused, so no further answering time is counted (C04). */
+    void pause() {
+        bankElapsed();
+        status = PAUSED;
+    }
+
+    void resume() {
+        activeSince = Instant.now();
+        status = ACTIVE;
+    }
+
+    /** Terminal: the room is closed and its clock is frozen for the review page. */
+    void finish(Instant at) {
+        bankElapsed();
+        status = COMPLETED;
+        endedAt = at;
+    }
+
+    /** Moves the elapsed time already spent into the bank and restarts the live segment. */
+    private void bankElapsed() {
+        if (ACTIVE.equals(status)) {
+            elapsedSeconds += Duration.between(activeSince, Instant.now()).getSeconds();
+            activeSince = Instant.now();
+        }
     }
 
     public Instant activeSince() {
         return activeSince;
-    }
-
-    void setActiveSince(Instant activeSince) {
-        this.activeSince = activeSince;
     }
 
     public Instant stageStartedAt() {
@@ -202,7 +227,12 @@ public class InterviewRoom {
         return endedAt;
     }
 
-    void setEndedAt(Instant endedAt) {
-        this.endedAt = endedAt;
+    /** Unsent text the candidate is working on. Restored on refresh; cleared when an answer lands. */
+    public String draft() {
+        return draft;
+    }
+
+    void setDraft(String draft) {
+        this.draft = draft == null ? "" : draft;
     }
 }

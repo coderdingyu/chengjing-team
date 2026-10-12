@@ -19,6 +19,11 @@ export type InterviewRoomView = {
   stage: InterviewStageView;
   turns: InterviewTurnView[];
   answers: InterviewAnswerView[];
+  /** Unsent text kept on the server so a refresh restores it (C04). */
+  draft: string;
+  /** Seconds banked in the room; frozen while paused or finished. */
+  elapsedSeconds: number;
+  endedAt: string | null;
   createdAt: string;
 };
 

@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { interviewApi } from "./interviewApi";
+import { stopAllCapture } from "./localCapture";
 import type {
   InterviewAnswerView,
   InterviewRoomView,
   InterviewTurnResultView,
   InterviewTurnView,
 } from "./types";
-import { INTENT_ACTIONS, gradeLabel, intentLabel, newRequestId, statusLabel } from "./types";
+import {
+  INTENT_ACTIONS,
+  formatClock,
+  gradeLabel,
+  intentLabel,
+  newRequestId,
+  statusLabel,
+} from "./types";
 import "./interview.css";
 
 /**
@@ -15,7 +23,8 @@ import "./interview.css";
  *
  * C01 — reopen a room that already exists.
  * C02 — text answers with an ordered transcript.
- * C03 — clarification / replay / thinking requests that are answered but never scored.
+ * C03 — clarification / replay / thinking requests answered but never scored.
+ * C04 — restorable draft, clock control (pause / resume) and ending into the review page.
  *
  * The room is loaded from the server by id, so a browser refresh lands on the same room instead of
  * creating a new one, and a room owned by another account answers with "不存在".
@@ -52,13 +61,18 @@ function useSubmissionIds() {
   return { idForText, idForIntent, forgetIntent, forgetAllIntents };
 }
 
+const DRAFT_SAVE_DELAY_MS = 600;
+
 export function InterviewRoom() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
   const [room, setRoom] = useState<InterviewRoomView>();
   const [loadError, setLoadError] = useState("");
   const [draft, setDraft] = useState("");
+  const [draftState, setDraftState] = useState<"idle" | "saving" | "saved">("idle");
+  const [elapsed, setElapsed] = useState(0);
   const [sendError, setSendError] = useState("");
-  const [sending, setSending] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [dialogueSource, setDialogueSource] = useState("");
   const { idForText, idForIntent, forgetIntent, forgetAllIntents } = useSubmissionIds();
 
@@ -67,10 +81,10 @@ export function InterviewRoom() {
     interviewApi
       .get<InterviewRoomView>(`/interviews/${id}`)
       .then((loaded) => {
-        if (!cancelled) {
-          setRoom(loaded);
-          setLoadError("");
-        }
+        if (cancelled) return;
+        setRoom(loaded);
+        setDraft(loaded.draft);
+        setLoadError("");
       })
       .catch((problem: Error) => {
         if (!cancelled) setLoadError(problem.message);
@@ -80,13 +94,44 @@ export function InterviewRoom() {
     };
   }, [id]);
 
-  // A new stage means new questions: the previous request ids belong to the old question.
   const stageIndex = room?.stageIndex;
+  const status = room?.status;
+
+  // A new stage means new questions: the previous request ids belong to the old question.
   useEffect(() => {
     forgetAllIntents();
   }, [forgetAllIntents, stageIndex]);
 
-  const applyResult = useCallback((result: InterviewTurnResultView) => {
+  // Local ticking so the clock reads smoothly; the server value re-syncs on every room update.
+  const serverElapsed = room?.elapsedSeconds ?? 0;
+  useEffect(() => {
+    setElapsed(serverElapsed);
+  }, [serverElapsed, id]);
+
+  useEffect(() => {
+    if (status !== "ACTIVE") return;
+    const timer = setInterval(() => setElapsed((value) => value + 1), 1000);
+    return () => clearInterval(timer);
+  }, [status, id]);
+
+  // Autosave the draft to the server so a refresh — even on another device — restores it.
+  const savedDraft = room?.draft ?? "";
+  useEffect(() => {
+    if (!room || room.status === "COMPLETED" || draft === savedDraft) return;
+    const handle = setTimeout(() => {
+      setDraftState("saving");
+      interviewApi
+        .put<InterviewRoomView>(`/interviews/${room.id}/draft`, { text: draft })
+        .then((updated) => {
+          setRoom((current) => (current ? { ...current, draft: updated.draft } : current));
+          setDraftState("saved");
+        })
+        .catch(() => setDraftState("idle"));
+    }, DRAFT_SAVE_DELAY_MS);
+    return () => clearTimeout(handle);
+  }, [draft, savedDraft, room]);
+
+  const applyTurnResult = useCallback((result: InterviewTurnResultView) => {
     setRoom((current) =>
       current
         ? {
@@ -103,12 +148,12 @@ export function InterviewRoom() {
   }, []);
 
   const submit = useCallback(async () => {
-    if (!room || sending) return;
+    if (!room || busy || room.status !== "ACTIVE") return;
     const text = draft.trim();
     if (!text) return;
 
     const requestId = idForText(text);
-    setSending(true);
+    setBusy(true);
     setSendError("");
     try {
       const result = await interviewApi.post<InterviewTurnResultView>(`/interviews/${room.id}/turns`, {
@@ -116,35 +161,57 @@ export function InterviewRoom() {
         questionId: room.questionId,
         text,
       });
-      applyResult(result);
+      applyTurnResult(result);
       setDraft("");
+      setRoom((current) => (current ? { ...current, draft: "" } : current));
+      setDraftState("idle");
     } catch (problem) {
       setSendError(problem instanceof Error ? problem.message : "提交失败，请重试");
     } finally {
-      setSending(false);
+      setBusy(false);
     }
-  }, [applyResult, draft, idForText, room, sending]);
+  }, [applyTurnResult, busy, draft, idForText, room]);
 
   const requestIntent = useCallback(
     async (intent: string) => {
-      if (!room || sending) return;
+      if (!room || busy || room.status !== "ACTIVE") return;
       const requestId = idForIntent(intent);
-      setSending(true);
+      setBusy(true);
       setSendError("");
       try {
         const result = await interviewApi.post<InterviewTurnResultView>(
           `/interviews/${room.id}/requests`,
           { requestId, questionId: room.questionId, intent },
         );
-        applyResult(result);
+        applyTurnResult(result);
         forgetIntent(intent);
       } catch (problem) {
         setSendError(problem instanceof Error ? problem.message : "请求失败，请重试");
       } finally {
-        setSending(false);
+        setBusy(false);
       }
     },
-    [applyResult, forgetIntent, idForIntent, room, sending],
+    [applyTurnResult, busy, forgetIntent, idForIntent, room],
+  );
+
+  const control = useCallback(
+    async (action: "pause" | "resume" | "finish") => {
+      if (!room || busy) return;
+      setBusy(true);
+      setSendError("");
+      try {
+        const updated = await interviewApi.post<InterviewRoomView>(`/interviews/${room.id}/${action}`, {});
+        setRoom(updated);
+        // Pausing and ending must not leave the microphone running.
+        if (action !== "resume") stopAllCapture();
+        if (action === "finish") navigate(`/interviews/${room.id}/review`);
+      } catch (problem) {
+        setSendError(problem instanceof Error ? problem.message : "操作失败，请重试");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, navigate, room],
   );
 
   if (loadError) {
@@ -168,8 +235,10 @@ export function InterviewRoom() {
     );
   }
 
+  const active = room.status === "ACTIVE";
+  const completed = room.status === "COMPLETED";
   const progress = Math.round(((room.stageIndex + 1) / room.totalStages) * 100);
-  const canSubmit = draft.trim().length > 0 && !sending;
+  const canSubmit = draft.trim().length > 0 && !busy && active;
 
   return (
     <div className="iv-room">
@@ -188,10 +257,39 @@ export function InterviewRoom() {
           <span className={`iv-badge iv-badge-${room.status.toLowerCase()}`}>
             {statusLabel(room.status)}
           </span>
+          <span className="iv-clock" aria-label="已用时">
+            ⏱ {formatClock(elapsed)}
+          </span>
           <span>已作答 {room.answers.length} 题</span>
           <span>目标时长 {room.minutes} 分钟</span>
         </div>
       </header>
+
+      <div className="iv-controls" role="group" aria-label="面试控制">
+        {active && (
+          <button type="button" className="iv-control-btn" onClick={() => void control("pause")} disabled={busy}>
+            暂停面试
+          </button>
+        )}
+        {room.status === "PAUSED" && (
+          <button type="button" className="iv-control-btn iv-control-strong" onClick={() => void control("resume")} disabled={busy}>
+            继续面试
+          </button>
+        )}
+        {!completed && (
+          <button type="button" className="iv-control-btn iv-control-danger" onClick={() => void control("finish")} disabled={busy}>
+            结束并查看复盘
+          </button>
+        )}
+        {completed && (
+          <Link className="iv-control-btn iv-control-strong" to={`/interviews/${room.id}/review`}>
+            查看复盘
+          </Link>
+        )}
+        {room.status === "PAUSED" && (
+          <span className="iv-muted">已暂停：计时与收音均已停止，继续后才可作答。</span>
+        )}
+      </div>
 
       <section className="iv-progress" aria-label="环节进度">
         <div className="iv-progress-track">
@@ -223,7 +321,7 @@ export function InterviewRoom() {
                   className="iv-intent-btn"
                   title={action.hint}
                   onClick={() => void requestIntent(action.intent)}
-                  disabled={sending}
+                  disabled={busy || !active}
                 >
                   {action.label}
                 </button>
@@ -253,19 +351,32 @@ export function InterviewRoom() {
               void submit();
             }}
           >
-            <label htmlFor="iv-draft">你的回答</label>
+            <div className="iv-composer-head">
+              <label htmlFor="iv-draft">你的回答</label>
+              <span className="iv-draft-state">
+                {draftState === "saving" ? "草稿保存中…" : draftState === "saved" ? "草稿已自动保存" : ""}
+              </span>
+            </div>
             <textarea
               id="iv-draft"
               value={draft}
-              onChange={(event) => setDraft(event.target.value)}
+              onChange={(event) => {
+                setDraft(event.target.value);
+                setDraftState("idle");
+              }}
               rows={5}
               maxLength={8000}
-              placeholder="用文字写下你的回答，提交后会生成一行有顺序的问答记录。"
+              disabled={completed}
+              placeholder={
+                active
+                  ? "用文字写下你的回答，草稿会自动保存，刷新也不会丢。"
+                  : "面试已暂停，继续后可以作答；草稿仍会保留。"
+              }
             />
             <div className="iv-composer-foot">
               <span className="iv-muted">{draft.trim().length} / 8000</span>
               <button type="submit" className="iv-primary" disabled={!canSubmit}>
-                {sending ? "提交中…" : "提交回答"}
+                {busy ? "提交中…" : "提交回答"}
               </button>
             </div>
             {sendError && (

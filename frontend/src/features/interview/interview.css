@@ -429,9 +429,123 @@
   overflow-wrap: anywhere;
 }
 
+/* C04 — clock, session controls, draft state, review page */
+
+.iv-clock {
+  font-variant-numeric: tabular-nums;
+  color: #3f5c45;
+}
+
+.iv-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 4px;
+}
+.iv-control-btn {
+  border: 1px solid #d3ded0;
+  background: #fffefa;
+  color: #43604a;
+  border-radius: 9px;
+  padding: 9px 16px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.iv-control-btn:hover:not(:disabled) {
+  background: #f2f7ec;
+  border-color: #b9cdb2;
+}
+.iv-control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.iv-control-strong {
+  background: #31533d;
+  border-color: #31533d;
+  color: #fff;
+}
+.iv-control-strong:hover:not(:disabled) {
+  background: #27452f;
+  border-color: #27452f;
+}
+.iv-control-danger {
+  color: #8d4a38;
+  border-color: #e7c9c2;
+  background: #fbeeea;
+}
+.iv-control-danger:hover:not(:disabled) {
+  background: #f7e3dc;
+  border-color: #d9b3a8;
+}
+
+.iv-composer-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.iv-draft-state {
+  font-size: 11px;
+  color: #7f9a7c;
+}
+
+.iv-inline-link {
+  margin-left: 8px;
+  color: #2f784d;
+}
+
+.iv-review-grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+.iv-summary {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.iv-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dashed #eef1ea;
+  padding-bottom: 9px;
+  font-size: 12px;
+}
+.iv-summary dt {
+  color: #7d8e7b;
+}
+.iv-summary dd {
+  margin: 0;
+  color: #35473c;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iv-tag-warn {
+  background: #f6f0e0;
+  color: #8a7433;
+}
+
+.iv-transcript-static {
+  max-height: none;
+  overflow: visible;
+}
+
 @media (max-width: 1000px) {
   .iv-lobby,
-  .iv-room-layout {
+  .iv-room-layout,
+  .iv-review-grid {
     grid-template-columns: 1fr;
   }
 }
