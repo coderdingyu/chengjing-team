@@ -47,6 +47,9 @@ public class InterviewRoom {
     private int turnSeq;
     /** Unsent answer text, kept so a refresh does not lose what the candidate was writing (C04). */
     private String draft = "";
+    /** Which 3D interviewer is on screen, and whether the camera was agreed to (C06). */
+    private String avatarId = InterviewAvatar.DEFAULT_ID;
+    private boolean videoConsent;
     /** Seconds already banked; the live part is added while the room is ACTIVE. */
     private long elapsedSeconds;
     /** Same idea as {@link #elapsedSeconds}, but scoped to the stage on screen (C05). */
@@ -256,5 +259,22 @@ public class InterviewRoom {
 
     void setDraft(String draft) {
         this.draft = draft == null ? "" : draft;
+    }
+
+    public String avatarId() {
+        return avatarId;
+    }
+
+    void setAvatarId(String avatarId) {
+        this.avatarId = avatarId;
+    }
+
+    /** Whether the candidate agreed to open the camera. Only ever a flag — never any video. */
+    public boolean videoConsent() {
+        return videoConsent;
+    }
+
+    void setVideoConsent(boolean videoConsent) {
+        this.videoConsent = videoConsent;
     }
 }

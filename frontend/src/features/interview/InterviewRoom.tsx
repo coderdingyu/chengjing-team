@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { LocalVideoPreview } from "./LocalVideoPreview";
 import { interviewApi } from "./interviewApi";
 import { stopAllCapture } from "./localCapture";
 import type {
   InterviewAnswerView,
+  InterviewAvatarView,
   InterviewRoomView,
   InterviewTurnResultView,
   InterviewTurnView,
@@ -17,6 +19,14 @@ import {
   statusLabel,
 } from "./types";
 import "./interview.css";
+
+/**
+ * The 3D interviewer is loaded on demand so `three` ends up in its own chunk instead of in the
+ * first paint every page pays for. The shared Vite config stays untouched.
+ */
+const InterviewerAvatar = lazy(() =>
+  import("./Avatar").then((module) => ({ default: module.InterviewerAvatar })),
+);
 
 /**
  * Owner: member C.
@@ -244,6 +254,46 @@ export function InterviewRoom() {
     }
   }, [busy, draft, forgetAllIntents, room]);
 
+  // C06 — the avatar choice is persisted so a refresh keeps the same interviewer.
+  const chooseAvatar = useCallback(
+    async (avatarId: string) => {
+      if (!room || busy || avatarId === room.avatar) return;
+      setBusy(true);
+      setSendError("");
+      try {
+        const updated = await interviewApi.put<InterviewRoomView>(`/interviews/${room.id}/avatar`, {
+          avatarId,
+        });
+        setRoom((current) => (current ? { ...current, avatar: updated.avatar } : updated));
+      } catch (problem) {
+        setSendError(problem instanceof Error ? problem.message : "切换形象失败，请重试");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, room],
+  );
+
+  /**
+   * C06 — the camera decision is recorded on the room, but the preview itself never leaves the
+   * browser: this only ever sends a boolean.
+   */
+  const setVideoConsent = useCallback(
+    (granted: boolean) => {
+      if (!room) return;
+      setRoom((current) => (current ? { ...current, videoConsent: granted } : current));
+      void interviewApi
+        .put<InterviewRoomView>(`/interviews/${room.id}/video-consent`, { granted })
+        .then((updated) =>
+          setRoom((current) =>
+            current ? { ...current, videoConsent: updated.videoConsent } : current,
+          ),
+        )
+        .catch(() => undefined);
+    },
+    [room],
+  );
+
   if (loadError) {
     return (
       <div className="iv-room">
@@ -271,6 +321,7 @@ export function InterviewRoom() {
   const canSubmit = draft.trim().length > 0 && !busy && active;
   // Over time is a hint, never a stop: the interview keeps running.
   const overStage = room.stageExpectedSeconds > 0 && stageClock > room.stageExpectedSeconds;
+  const currentLook = room.avatars.find((look) => look.id === room.avatar) ?? room.avatars[0];
 
   return (
     <div className="iv-room">
@@ -353,6 +404,43 @@ export function InterviewRoom() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="iv-panel iv-presence">
+        <div className="iv-presence-avatar">
+          {currentLook ? (
+            <>
+              <Suspense fallback={<div className="iv-avatar-stage iv-avatar-loading">正在加载三维形象…</div>}>
+                <InterviewerAvatar look={currentLook} />
+              </Suspense>
+              <span className="iv-presence-name">{currentLook.name}</span>
+            </>
+          ) : (
+            <p className="iv-muted">没有可用的面试官形象。</p>
+          )}
+        </div>
+
+        <div className="iv-presence-side">
+          <h2>三维面试官</h2>
+          <p className="iv-muted">{currentLook?.trait ?? ""}</p>
+          <div className="iv-avatar-picker" role="group" aria-label="切换面试官形象">
+            {room.avatars.map((look) => (
+              <button
+                key={look.id}
+                type="button"
+                className={`iv-avatar-chip${look.id === room.avatar ? " iv-avatar-chip-active" : ""}`}
+                aria-pressed={look.id === room.avatar}
+                onClick={() => void chooseAvatar(look.id)}
+                disabled={busy || completed}
+              >
+                <i style={{ background: look.accent }} aria-hidden="true" />
+                {look.name}
+              </button>
+            ))}
+          </div>
+
+          <LocalVideoPreview consented={room.videoConsent} onConsentChange={setVideoConsent} />
+        </div>
       </section>
 
       <div className="iv-room-layout">

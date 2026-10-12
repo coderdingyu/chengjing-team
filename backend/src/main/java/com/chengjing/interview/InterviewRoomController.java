@@ -90,4 +90,19 @@ public class InterviewRoomController {
     public ApiResponse<Map<String, Object>> nextStage(@PathVariable String id) {
         return ApiResponse.ok(service.advanceStage(id));
     }
+
+    /** C06 — switch the 3D interviewer. */
+    @PutMapping("/{id}/avatar")
+    public ApiResponse<Map<String, Object>> chooseAvatar(@PathVariable String id,
+                                                         @RequestBody InterviewRoomService.AvatarRequest request) {
+        return ApiResponse.ok(service.chooseAvatar(id, request));
+    }
+
+    /** C06 — record the separate camera consent. The body carries a flag, never any video. */
+    @PutMapping("/{id}/video-consent")
+    public ApiResponse<Map<String, Object>> setVideoConsent(
+            @PathVariable String id,
+            @RequestBody InterviewRoomService.VideoConsentRequest request) {
+        return ApiResponse.ok(service.setVideoConsent(id, request));
+    }
 }

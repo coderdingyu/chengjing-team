@@ -23,6 +23,11 @@ export type InterviewRoomView = {
   stageElapsedSeconds: number;
   stageExpectedSeconds: number;
   isLastStage: boolean;
+  /** Selected 3D interviewer and the catalog to switch between (C06). */
+  avatar: string;
+  avatars: InterviewAvatarView[];
+  /** Whether the candidate agreed to open the camera. Never any video data. */
+  videoConsent: boolean;
   turns: InterviewTurnView[];
   answers: InterviewAnswerView[];
   /** Unsent text kept on the server so a refresh restores it (C04). */
@@ -31,6 +36,15 @@ export type InterviewRoomView = {
   elapsedSeconds: number;
   endedAt: string | null;
   createdAt: string;
+};
+
+/** One switchable 3D interviewer look (C06). */
+export type InterviewAvatarView = {
+  id: string;
+  name: string;
+  trait: string;
+  accent: string;
+  build: string;
 };
 
 export type InterviewTurnView = {

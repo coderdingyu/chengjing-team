@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
  * C03 — answer clarification / replay / thinking requests without turning them into scored answers.
  * C04 — keep a restorable draft and control the room's clock (pause / resume / finish).
  * C05 — advance through the stage lineup, keep the draft across stages and report over-time gently.
+ * C06 — switch the 3D interviewer and record a separate camera consent without ever taking video.
  *
  * Acceptance:
  * <ul>
@@ -28,7 +29,9 @@ import org.springframework.stereotype.Service;
  *   <li>an unsent draft survives a refresh; a paused room stops counting time and refuses answers;
  *       ending the room is terminal and hands the candidate to the review page;</li>
  *   <li>the room reports where it is in the stage lineup and how long the current stage has run
- *       against its expected time, and moving on keeps the draft without enforcing the time limit.</li>
+ *       against its expected time, and moving on keeps the draft without enforcing the time limit;</li>
+ *   <li>at least three interviewer looks can be selected, and the camera decision is a flag of its
+ *       own that carries no image data.</li>
  * </ul>
  */
 @Service
@@ -65,6 +68,19 @@ public class InterviewRoomService {
 
     /** Request body of {@code PUT /api/v1/interviews/{id}/draft}. */
     public record DraftRequest(String text) {
+    }
+
+    /** Request body of {@code PUT /api/v1/interviews/{id}/avatar}. */
+    public record AvatarRequest(String avatarId) {
+    }
+
+    /**
+     * Request body of {@code PUT /api/v1/interviews/{id}/video-consent}.
+     *
+     * It has exactly one field on purpose: there is no way to send a frame, a clip or a stream
+     * through this endpoint, so "不上传视频" holds by construction and not only by convention.
+     */
+    public record VideoConsentRequest(Boolean granted) {
     }
 
     /**
@@ -205,6 +221,36 @@ public class InterviewRoomService {
     private long expectedStageSeconds(InterviewRoom room) {
         int stages = Math.max(1, room.totalStages());
         return (long) room.minutes() * 60 / stages;
+    }
+
+    /** C06 — switches the 3D interviewer showing in the room. */
+    public Map<String, Object> chooseAvatar(String roomId, AvatarRequest request) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        String avatarId = request.avatarId() == null ? "" : request.avatarId().trim();
+        if (!InterviewAvatar.isKnown(avatarId)) {
+            throw InterviewException.badRequest("请选择可用的面试官形象");
+        }
+        synchronized (room) {
+            if (InterviewRoom.COMPLETED.equals(room.status())) {
+                throw InterviewException.conflict("本场面试已结束，不能再切换形象");
+            }
+            room.setAvatarId(avatarId);
+            return view(room);
+        }
+    }
+
+    /**
+     * C06 — records the camera decision separately from anything else.
+     *
+     * The camera is a separate consent: creating a room does not turn it on, and this endpoint stores
+     * a boolean only. The preview itself never leaves the browser, so nothing here can receive it.
+     */
+    public Map<String, Object> setVideoConsent(String roomId, VideoConsentRequest request) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        synchronized (room) {
+            room.setVideoConsent(Boolean.TRUE.equals(request.granted()));
+            return view(room);
+        }
     }
 
     /**
@@ -444,6 +490,9 @@ public class InterviewRoomService {
         view.put("stageElapsedSeconds", room.stageElapsedSeconds());
         view.put("stageExpectedSeconds", expectedStageSeconds(room));
         view.put("isLastStage", room.isLastStage());
+        view.put("avatar", room.avatarId());
+        view.put("avatars", InterviewAvatar.all());
+        view.put("videoConsent", room.videoConsent());
         view.put("turns", transcript(room));
         view.put("answers", withRoomLock(room, () -> room.answers().stream().map(this::view).toList()));
         view.put("draft", room.draft());
