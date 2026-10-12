@@ -1,0 +1,460 @@
+/* Owner: member C. Styles for the interview feature; prefix `iv-` keeps them out of the shared sheet. */
+
+.iv-heading {
+  max-width: 720px;
+  margin-bottom: 30px;
+}
+.iv-heading h1 {
+  font-family: "Noto Serif SC", serif;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 500;
+  margin: 14px 0 12px;
+  letter-spacing: -0.04em;
+}
+.iv-heading p {
+  color: #7d8e7b;
+  font-size: 13px;
+  line-height: 1.9;
+  margin: 0;
+}
+
+.iv-error {
+  border: 1px solid #e7c9c2;
+  background: #fbeeea;
+  color: #8d4a38;
+  border-radius: 11px;
+  padding: 13px 17px;
+  font-size: 12px;
+  margin: 18px 0;
+}
+.iv-muted {
+  color: #93a091;
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.iv-lobby {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.iv-panel {
+  background: #fffefa;
+  border: 1px solid #e1e8dc;
+  border-radius: 16px;
+  padding: 24px;
+}
+.iv-panel h2 {
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0 0 18px;
+}
+.iv-panel form {
+  display: grid;
+  gap: 14px;
+}
+.iv-panel label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #5d7359;
+}
+.iv-panel select,
+.iv-panel textarea {
+  width: 100%;
+  border: 1px solid #dce2d6;
+  background: #fffdf8;
+  color: #35473c;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 13px;
+}
+.iv-panel textarea {
+  resize: vertical;
+}
+.iv-form-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.iv-primary {
+  min-height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: #31533d;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.iv-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.iv-fineprint {
+  margin: 16px 0 0;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #93a091;
+}
+
+.iv-recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.iv-recent li + li {
+  border-top: 1px solid #eef1ea;
+}
+.iv-recent a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 4px;
+}
+.iv-recent a:hover strong {
+  color: #2f784d;
+}
+.iv-recent-main {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.iv-recent-main strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.iv-recent-main small {
+  font-size: 11px;
+  color: #93a091;
+}
+.iv-tag {
+  font-size: 11px;
+  color: #5f8a63;
+  background: #eef3e6;
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.iv-room {
+  display: block;
+}
+.iv-back {
+  display: inline-block;
+  margin-bottom: 26px;
+  color: #6d876f;
+  font-size: 12px;
+}
+.iv-back:hover {
+  color: #2f784d;
+}
+.iv-room-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.iv-room-heading h1 {
+  font-size: 25px;
+  font-weight: 500;
+  margin: 10px 0 0;
+}
+.iv-room-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #7d8e7b;
+}
+.iv-badge {
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  background: #eef3e6;
+  color: #4f7a55;
+}
+.iv-badge-paused {
+  background: #f6f0e0;
+  color: #8a7433;
+}
+.iv-badge-completed {
+  background: #eceff0;
+  color: #5d6a6b;
+}
+
+.iv-progress {
+  margin: 22px 0 20px;
+}
+.iv-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #e7ecdf;
+  overflow: hidden;
+}
+.iv-progress-fill {
+  height: 100%;
+  background: #6a8f65;
+  transition: width 0.3s ease;
+}
+.iv-progress p {
+  margin: 9px 0 0;
+  font-size: 11px;
+  color: #8a9a87;
+}
+
+.iv-room-layout {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.iv-stage-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 26px;
+  background: linear-gradient(145deg, #e3ecdb, #d3e2d2);
+  border: 1px solid #d7e4d3;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.iv-stage-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #6c8a6b;
+}
+.iv-question {
+  font-size: 17px;
+  line-height: 1.9;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.iv-material {
+  background: #fcfff8c4;
+  border: 1px solid #fbfff5bb;
+  border-radius: 13px;
+  padding: 14px 16px;
+  margin-top: auto;
+}
+.iv-material summary {
+  font-size: 11px;
+  cursor: pointer;
+  color: #70896f;
+}
+.iv-material p {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #5e7359;
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+}
+
+.iv-conversation {
+  min-height: 300px;
+}
+
+.iv-intent-row {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #c9d8c4;
+  display: grid;
+  gap: 9px;
+}
+.iv-intent-hint {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #7d9180;
+}
+.iv-intent-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.iv-intent-btn {
+  border: 1px solid #c4d6bd;
+  background: #fcfff8;
+  color: #3f5c45;
+  border-radius: 999px;
+  padding: 7px 15px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.iv-intent-btn:hover:not(:disabled) {
+  background: #eef6e7;
+  border-color: #a9c69f;
+}
+.iv-intent-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.iv-transcript {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.iv-turn {
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #eaeee4;
+  background: #fdfefb;
+}
+.iv-turn-me {
+  background: #f1f6ea;
+  border-color: #dde8d2;
+}
+.iv-turn-who {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #8a9a87;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.iv-turn-intent {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #6d7f8a;
+  background: #eaefef;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.iv-turn-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #35473c;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.iv-composer {
+  display: grid;
+  gap: 9px;
+  padding-top: 16px;
+  border-top: 1px solid #eef1ea;
+}
+.iv-composer label {
+  font-size: 12px;
+  color: #5d7359;
+}
+.iv-composer textarea {
+  width: 100%;
+  border: 1px solid #dce2d6;
+  background: #fffdf8;
+  color: #35473c;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.8;
+  resize: vertical;
+}
+.iv-composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.iv-composer-foot .iv-primary {
+  min-width: 128px;
+  padding: 0 20px;
+}
+.iv-source-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #93a091;
+}
+
+.iv-answers {
+  margin-top: 20px;
+}
+.iv-answer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.iv-answer-item {
+  border: 1px solid #eaeee4;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fdfefb;
+}
+.iv-answer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.iv-answer-index {
+  font-size: 11px;
+  color: #6d876f;
+}
+.iv-answer-q {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #7d8e7b;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.iv-answer-a {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #35473c;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1000px) {
+  .iv-lobby,
+  .iv-room-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 590px) {
+  .iv-form-two {
+    grid-template-columns: 1fr;
+  }
+  .iv-panel {
+    padding: 18px;
+  }
+  .iv-room-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .iv-room-heading h1 {
+    font-size: 21px;
+  }
+  .iv-question {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iv-progress-fill {
+    transition: none;
+  }
+}
