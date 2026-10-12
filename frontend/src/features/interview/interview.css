@@ -208,6 +208,66 @@
   color: #8a9a87;
 }
 
+.iv-stage-lineup {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.iv-stage-lineup li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 5px 12px 5px 7px;
+  border: 1px solid #e6ebe1;
+  background: #fbfcf8;
+  color: #93a091;
+}
+.iv-stage-no {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  background: #eceee9;
+  color: #7d8e7b;
+}
+.iv-stage-done {
+  color: #5f8a63;
+  border-color: #dbe8d4;
+  background: #f2f7ec;
+}
+.iv-stage-done .iv-stage-no {
+  background: #cfe2c6;
+  color: #3f5c45;
+}
+.iv-stage-current {
+  color: #2f5a3d;
+  border-color: #8fb685;
+  background: #e4f0db;
+  font-weight: 500;
+}
+.iv-stage-current .iv-stage-no {
+  background: #31533d;
+  color: #fff;
+}
+
+.iv-stage-time {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+  color: #6c8a6b;
+  font-variant-numeric: tabular-nums;
+}
+
 .iv-room-layout {
   display: grid;
   grid-template-columns: 1.05fr 1fr;

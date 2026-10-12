@@ -84,4 +84,10 @@ public class InterviewRoomController {
     public ApiResponse<Map<String, Object>> finish(@PathVariable String id) {
         return ApiResponse.ok(service.finish(id));
     }
+
+    /** C05 — move to the next stage. The current draft is preserved. */
+    @PostMapping("/{id}/stage/next")
+    public ApiResponse<Map<String, Object>> nextStage(@PathVariable String id) {
+        return ApiResponse.ok(service.advanceStage(id));
+    }
 }

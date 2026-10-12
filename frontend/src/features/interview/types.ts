@@ -17,6 +17,12 @@ export type InterviewRoomView = {
   totalStages: number;
   questionId: string;
   stage: InterviewStageView;
+  /** All stage titles in order, so the room can show the lineup (C05). */
+  stages: string[];
+  /** Seconds spent on the current stage, and the even split of the target duration for it. */
+  stageElapsedSeconds: number;
+  stageExpectedSeconds: number;
+  isLastStage: boolean;
   turns: InterviewTurnView[];
   answers: InterviewAnswerView[];
   /** Unsent text kept on the server so a refresh restores it (C04). */

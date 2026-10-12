@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
  * C02 — store a text answer, keep the transcript in order and make repeated submissions idempotent.
  * C03 — answer clarification / replay / thinking requests without turning them into scored answers.
  * C04 — keep a restorable draft and control the room's clock (pause / resume / finish).
+ * C05 — advance through the stage lineup, keep the draft across stages and report over-time gently.
  *
  * Acceptance:
  * <ul>
@@ -25,7 +26,9 @@ import org.springframework.stereotype.Service;
  *   <li>each of the three intent requests gets a clear response, and clarify/replay never create an
  *       answer that member D could score;</li>
  *   <li>an unsent draft survives a refresh; a paused room stops counting time and refuses answers;
- *       ending the room is terminal and hands the candidate to the review page.</li>
+ *       ending the room is terminal and hands the candidate to the review page;</li>
+ *   <li>the room reports where it is in the stage lineup and how long the current stage has run
+ *       against its expected time, and moving on keeps the draft without enforcing the time limit.</li>
  * </ul>
  */
 @Service
@@ -177,6 +180,31 @@ public class InterviewRoomService {
             }
             return view(room);
         }
+    }
+
+    /**
+     * C05 — moves the room to the next stage.
+     *
+     * The unsent draft is intentionally kept: the acceptance rule is "下一环节不丢掉草稿". Going over
+     * the expected time for a stage is only reported through the view, never enforced here — the
+     * interviewer must not cut the candidate off.
+     */
+    public Map<String, Object> advanceStage(String roomId) {
+        InterviewRoom room = store.owned(currentUser.requireUserId(), roomId);
+        synchronized (room) {
+            requireActive(room);
+            if (room.isLastStage()) {
+                throw InterviewException.conflict("已经是最后一个环节，可以结束面试并查看复盘");
+            }
+            room.nextStage();
+            return view(room);
+        }
+    }
+
+    /** Even split of the target duration across stages, used for the "预计时长" hint. */
+    private long expectedStageSeconds(InterviewRoom room) {
+        int stages = Math.max(1, room.totalStages());
+        return (long) room.minutes() * 60 / stages;
     }
 
     /**
@@ -412,6 +440,10 @@ public class InterviewRoomService {
                 "title", stage.title(),
                 "prompt", stage.prompt(),
                 "material", stage.material()));
+        view.put("stages", room.stages().stream().map(InterviewStage::title).toList());
+        view.put("stageElapsedSeconds", room.stageElapsedSeconds());
+        view.put("stageExpectedSeconds", expectedStageSeconds(room));
+        view.put("isLastStage", room.isLastStage());
         view.put("turns", transcript(room));
         view.put("answers", withRoomLock(room, () -> room.answers().stream().map(this::view).toList()));
         view.put("draft", room.draft());

@@ -71,6 +71,7 @@ export function InterviewRoom() {
   const [draft, setDraft] = useState("");
   const [draftState, setDraftState] = useState<"idle" | "saving" | "saved">("idle");
   const [elapsed, setElapsed] = useState(0);
+  const [stageClock, setStageClock] = useState(0);
   const [sendError, setSendError] = useState("");
   const [busy, setBusy] = useState(false);
   const [dialogueSource, setDialogueSource] = useState("");
@@ -113,6 +114,18 @@ export function InterviewRoom() {
     const timer = setInterval(() => setElapsed((value) => value + 1), 1000);
     return () => clearInterval(timer);
   }, [status, id]);
+
+  // The current stage has its own clock, used for the "预计时长" hint.
+  const serverStageElapsed = room?.stageElapsedSeconds ?? 0;
+  useEffect(() => {
+    setStageClock(serverStageElapsed);
+  }, [serverStageElapsed, id, stageIndex]);
+
+  useEffect(() => {
+    if (status !== "ACTIVE") return;
+    const timer = setInterval(() => setStageClock((value) => value + 1), 1000);
+    return () => clearInterval(timer);
+  }, [status, id, stageIndex]);
 
   // Autosave the draft to the server so a refresh — even on another device — restores it.
   const savedDraft = room?.draft ?? "";
@@ -214,6 +227,23 @@ export function InterviewRoom() {
     [busy, navigate, room],
   );
 
+  // C05 — going to the next stage must not lose what the candidate was typing: the local draft is
+  // kept on top of the server response even when the debounced save has not fired yet.
+  const goNextStage = useCallback(async () => {
+    if (!room || busy || room.status !== "ACTIVE" || room.isLastStage) return;
+    setBusy(true);
+    setSendError("");
+    try {
+      const updated = await interviewApi.post<InterviewRoomView>(`/interviews/${room.id}/stage/next`, {});
+      setRoom({ ...updated, draft });
+      forgetAllIntents();
+    } catch (problem) {
+      setSendError(problem instanceof Error ? problem.message : "推进失败，请重试");
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, draft, forgetAllIntents, room]);
+
   if (loadError) {
     return (
       <div className="iv-room">
@@ -239,6 +269,8 @@ export function InterviewRoom() {
   const completed = room.status === "COMPLETED";
   const progress = Math.round(((room.stageIndex + 1) / room.totalStages) * 100);
   const canSubmit = draft.trim().length > 0 && !busy && active;
+  // Over time is a hint, never a stop: the interview keeps running.
+  const overStage = room.stageExpectedSeconds > 0 && stageClock > room.stageExpectedSeconds;
 
   return (
     <div className="iv-room">
@@ -276,6 +308,11 @@ export function InterviewRoom() {
             继续面试
           </button>
         )}
+        {active && !room.isLastStage && (
+          <button type="button" className="iv-control-btn" onClick={() => void goNextStage()} disabled={busy}>
+            进入下一环节
+          </button>
+        )}
         {!completed && (
           <button type="button" className="iv-control-btn iv-control-danger" onClick={() => void control("finish")} disabled={busy}>
             结束并查看复盘
@@ -298,11 +335,35 @@ export function InterviewRoom() {
         <p>
           第 {room.stageIndex + 1} / {room.totalStages} 环节 · {room.stage.title}
         </p>
+        <ol className="iv-stage-lineup" aria-label="环节顺序">
+          {room.stages.map((title, index) => (
+            <li
+              key={title}
+              aria-current={index === room.stageIndex ? "step" : undefined}
+              className={
+                index < room.stageIndex
+                  ? "iv-stage-done"
+                  : index === room.stageIndex
+                    ? "iv-stage-current"
+                    : "iv-stage-todo"
+              }
+            >
+              <span className="iv-stage-no">{index + 1}</span>
+              {title}
+            </li>
+          ))}
+        </ol>
       </section>
 
       <div className="iv-room-layout">
         <section className="iv-stage-card">
           <span className="iv-stage-label">当前环节 · {room.stage.title}</span>
+          <div className="iv-stage-time">
+            <span>
+              本环节 {formatClock(stageClock)} / 预计 {formatClock(room.stageExpectedSeconds)}
+            </span>
+            {overStage && <span className="iv-tag iv-tag-warn">超出预计时长，可继续作答</span>}
+          </div>
           <p className="iv-question">{room.stage.prompt}</p>
           {room.stage.material && (
             <details className="iv-material">

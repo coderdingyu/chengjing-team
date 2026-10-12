@@ -49,6 +49,8 @@ public class InterviewRoom {
     private String draft = "";
     /** Seconds already banked; the live part is added while the room is ACTIVE. */
     private long elapsedSeconds;
+    /** Same idea as {@link #elapsedSeconds}, but scoped to the stage on screen (C05). */
+    private long stageElapsedSeconds;
     private Instant activeSince = Instant.now();
     private Instant stageStartedAt = Instant.now();
     private Instant endedAt;
@@ -193,6 +195,7 @@ public class InterviewRoom {
 
     void resume() {
         activeSince = Instant.now();
+        stageStartedAt = activeSince;
         status = ACTIVE;
     }
 
@@ -207,8 +210,31 @@ public class InterviewRoom {
     private void bankElapsed() {
         if (ACTIVE.equals(status)) {
             elapsedSeconds += Duration.between(activeSince, Instant.now()).getSeconds();
+            stageElapsedSeconds += Duration.between(stageStartedAt, Instant.now()).getSeconds();
             activeSince = Instant.now();
+            stageStartedAt = activeSince;
         }
+    }
+
+    /** Seconds spent on the current stage; frozen while paused or finished. */
+    public long stageElapsedSeconds() {
+        if (ACTIVE.equals(status)) {
+            return stageElapsedSeconds + Duration.between(stageStartedAt, Instant.now()).getSeconds();
+        }
+        return stageElapsedSeconds;
+    }
+
+    /**
+     * C05 — moves to the next stage.
+     *
+     * The clock for the new stage starts at zero, but the draft is deliberately left untouched: a
+     * candidate who typed a little and then advanced must not lose the text.
+     */
+    void nextStage() {
+        bankElapsed();
+        stageIndex = Math.min(stageIndex + 1, stages.size() - 1);
+        stageElapsedSeconds = 0;
+        stageStartedAt = Instant.now();
     }
 
     public Instant activeSince() {
@@ -217,10 +243,6 @@ public class InterviewRoom {
 
     public Instant stageStartedAt() {
         return stageStartedAt;
-    }
-
-    void setStageStartedAt(Instant stageStartedAt) {
-        this.stageStartedAt = stageStartedAt;
     }
 
     public Instant endedAt() {
