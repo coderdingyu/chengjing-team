@@ -1,7 +1,10 @@
 package com.chengjing.interview;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Owner: member C (interview module).
@@ -32,9 +35,15 @@ public class InterviewRoom {
     private final String title;
     private final Instant createdAt;
     private final List<InterviewStage> stages;
+    private final List<InterviewTurn> turns = new ArrayList<>();
+    private final List<InterviewAnswer> answers = new ArrayList<>();
+    /** Identifiers already applied, so a retried submission never produces a second answer. */
+    private final Set<String> appliedRequests = new LinkedHashSet<>();
 
     private String status = ACTIVE;
     private int stageIndex;
+    private int followUps;
+    private int turnSeq;
     private long elapsedSeconds;
     private Instant activeSince = Instant.now();
     private Instant stageStartedAt = Instant.now();
@@ -122,6 +131,47 @@ public class InterviewRoom {
 
     public boolean isLastStage() {
         return stageIndex >= stages.size() - 1;
+    }
+
+    /**
+     * Stable identifier of the question currently on screen. A turn carries it so a page that was
+     * left open across a stage change cannot silently attach its answer to the wrong question.
+     */
+    public String currentQuestionId() {
+        return id + ":stage-" + stageIndex;
+    }
+
+    public List<InterviewTurn> turns() {
+        return turns;
+    }
+
+    public List<InterviewAnswer> answers() {
+        return answers;
+    }
+
+    public int nextTurnSeq() {
+        return ++turnSeq;
+    }
+
+    public int followUps() {
+        return followUps;
+    }
+
+    void setFollowUps(int followUps) {
+        this.followUps = followUps;
+    }
+
+    public boolean hasApplied(String requestId) {
+        return appliedRequests.contains(requestId);
+    }
+
+    void rememberRequest(String requestId) {
+        appliedRequests.add(requestId);
+    }
+
+    /** The turn already stored for a request id, or {@code null} when the request is new. */
+    public InterviewTurn turnForRequest(String requestId) {
+        return turns.stream().filter(turn -> requestId.equals(turn.requestId())).findFirst().orElse(null);
     }
 
     public long elapsedSeconds() {

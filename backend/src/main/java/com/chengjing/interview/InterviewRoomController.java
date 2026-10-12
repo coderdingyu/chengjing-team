@@ -45,4 +45,10 @@ public class InterviewRoomController {
     public ApiResponse<Map<String, Object>> reopen(@PathVariable String id) {
         return ApiResponse.ok(service.reopen(id));
     }
+
+    @PostMapping("/{id}/turns")
+    public ApiResponse<Map<String, Object>> submitTurn(@PathVariable String id,
+                                                       @RequestBody InterviewRoomService.TurnRequest request) {
+        return ApiResponse.ok(service.submitTurn(id, request));
+    }
 }
