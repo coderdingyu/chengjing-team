@@ -7,29 +7,49 @@ import type {
   InterviewTurnResultView,
   InterviewTurnView,
 } from "./types";
-import { gradeLabel, newRequestId, statusLabel } from "./types";
+import { INTENT_ACTIONS, gradeLabel, intentLabel, newRequestId, statusLabel } from "./types";
 import "./interview.css";
 
 /**
- * Owner: member C. C01 — reopen a room that already exists; C02 — text answers with an ordered
- * transcript.
+ * Owner: member C.
+ *
+ * C01 — reopen a room that already exists.
+ * C02 — text answers with an ordered transcript.
+ * C03 — clarification / replay / thinking requests that are answered but never scored.
  *
  * The room is loaded from the server by id, so a browser refresh lands on the same room instead of
  * creating a new one, and a room owned by another account answers with "不存在".
  *
- * A submission carries a `requestId` that is minted once per distinct draft and reused on a retry,
- * so clicking "提交" twice (or a network resend) records the answer exactly once.
+ * A submission carries a `requestId` that is minted once per distinct draft (or per intent) and
+ * reused on a retry, so clicking "提交" twice — or a network resend — records it exactly once.
  */
 
-/** The submit id is bound to the text it was minted for; the same text reuses the same id. */
-function useSubmissionId() {
+/** Binds a submit id to the thing it was minted for, so a retry replays instead of duplicating. */
+function useSubmissionIds() {
   const ref = useRef<{ text: string; id: string }>({ text: "", id: "" });
-  return useCallback((text: string) => {
+  const intents = useRef<Record<string, string>>({});
+
+  const idForText = useCallback((text: string) => {
     if (ref.current.id === "" || ref.current.text !== text) {
       ref.current = { text, id: newRequestId() };
     }
     return ref.current.id;
   }, []);
+
+  const idForIntent = useCallback((intent: string) => {
+    intents.current[intent] ??= newRequestId();
+    return intents.current[intent];
+  }, []);
+
+  const forgetIntent = useCallback((intent: string) => {
+    delete intents.current[intent];
+  }, []);
+
+  const forgetAllIntents = useCallback(() => {
+    intents.current = {};
+  }, []);
+
+  return { idForText, idForIntent, forgetIntent, forgetAllIntents };
 }
 
 export function InterviewRoom() {
@@ -40,7 +60,7 @@ export function InterviewRoom() {
   const [sendError, setSendError] = useState("");
   const [sending, setSending] = useState(false);
   const [dialogueSource, setDialogueSource] = useState("");
-  const requestIdFor = useSubmissionId();
+  const { idForText, idForIntent, forgetIntent, forgetAllIntents } = useSubmissionIds();
 
   useEffect(() => {
     let cancelled = false;
@@ -60,13 +80,34 @@ export function InterviewRoom() {
     };
   }, [id]);
 
-  const submit = useCallback(async () => {
-    if (!room) return;
-    const text = draft.trim();
-    if (!text || sending) return;
+  // A new stage means new questions: the previous request ids belong to the old question.
+  const stageIndex = room?.stageIndex;
+  useEffect(() => {
+    forgetAllIntents();
+  }, [forgetAllIntents, stageIndex]);
 
-    // One id per distinct answer: a repeat submit of the same text replays instead of duplicating.
-    const requestId = requestIdFor(text);
+  const applyResult = useCallback((result: InterviewTurnResultView) => {
+    setRoom((current) =>
+      current
+        ? {
+            ...current,
+            turns: result.transcript,
+            answers: result.answers,
+            stageIndex: result.stageIndex,
+            totalStages: result.totalStages,
+            status: result.status,
+          }
+        : current,
+    );
+    setDialogueSource(result.dialogueSource);
+  }, []);
+
+  const submit = useCallback(async () => {
+    if (!room || sending) return;
+    const text = draft.trim();
+    if (!text) return;
+
+    const requestId = idForText(text);
     setSending(true);
     setSendError("");
     try {
@@ -75,26 +116,36 @@ export function InterviewRoom() {
         questionId: room.questionId,
         text,
       });
-      setRoom((current) =>
-        current
-          ? {
-              ...current,
-              turns: result.transcript,
-              answers: result.answers,
-              stageIndex: result.stageIndex,
-              totalStages: result.totalStages,
-              status: result.status,
-            }
-          : current,
-      );
-      setDialogueSource(result.dialogueSource);
+      applyResult(result);
       setDraft("");
     } catch (problem) {
       setSendError(problem instanceof Error ? problem.message : "提交失败，请重试");
     } finally {
       setSending(false);
     }
-  }, [draft, requestIdFor, room, sending]);
+  }, [applyResult, draft, idForText, room, sending]);
+
+  const requestIntent = useCallback(
+    async (intent: string) => {
+      if (!room || sending) return;
+      const requestId = idForIntent(intent);
+      setSending(true);
+      setSendError("");
+      try {
+        const result = await interviewApi.post<InterviewTurnResultView>(
+          `/interviews/${room.id}/requests`,
+          { requestId, questionId: room.questionId, intent },
+        );
+        applyResult(result);
+        forgetIntent(intent);
+      } catch (problem) {
+        setSendError(problem instanceof Error ? problem.message : "请求失败，请重试");
+      } finally {
+        setSending(false);
+      }
+    },
+    [applyResult, forgetIntent, idForIntent, room, sending],
+  );
 
   if (loadError) {
     return (
@@ -118,7 +169,6 @@ export function InterviewRoom() {
   }
 
   const progress = Math.round(((room.stageIndex + 1) / room.totalStages) * 100);
-  const answered = room.answers.length;
   const canSubmit = draft.trim().length > 0 && !sending;
 
   return (
@@ -138,7 +188,7 @@ export function InterviewRoom() {
           <span className={`iv-badge iv-badge-${room.status.toLowerCase()}`}>
             {statusLabel(room.status)}
           </span>
-          <span>已作答 {answered} 题</span>
+          <span>已作答 {room.answers.length} 题</span>
           <span>目标时长 {room.minutes} 分钟</span>
         </div>
       </header>
@@ -162,13 +212,31 @@ export function InterviewRoom() {
               <p>{room.stage.material}</p>
             </details>
           )}
+
+          <div className="iv-intent-row">
+            <span className="iv-intent-hint">面试中可随时请求（不计入作答）</span>
+            <div className="iv-intent-buttons">
+              {INTENT_ACTIONS.map((action) => (
+                <button
+                  key={action.intent}
+                  type="button"
+                  className="iv-intent-btn"
+                  title={action.hint}
+                  onClick={() => void requestIntent(action.intent)}
+                  disabled={sending}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="iv-panel iv-conversation">
           <h2>对话记录</h2>
           {room.turns.length === 0 ? (
             <p className="iv-muted">
-              还没有记录。在下方写下你的回答并提交，问答会按顺序出现在这里。
+              还没有记录。写下回答并提交，或先用下方的请求让面试官澄清、重听、给你思考时间。
             </p>
           ) : (
             <ol className="iv-transcript" aria-label="问答记录">
@@ -210,8 +278,8 @@ export function InterviewRoom() {
           {dialogueSource && (
             <p className="iv-source-note">
               {dialogueSource === "LOCAL"
-                ? "当前由本地确定性规则生成追问（尚未接入语音/模型网关），提交内容仅保存在本次面试房间中。"
-                : "追问来自外部对话服务。"}
+                ? "澄清、重听、思考与追问目前由本地确定性规则生成（尚未接入语音/模型网关），提交内容仅保存在本次面试房间中。"
+                : "回应来自外部对话服务。"}
             </p>
           )}
         </section>
@@ -233,9 +301,13 @@ export function InterviewRoom() {
 
 function TranscriptLine({ turn }: { turn: InterviewTurnView }) {
   const isCandidate = turn.role === "candidate";
+  const badge = intentLabel(turn.intent);
   return (
     <li className={`iv-turn ${isCandidate ? "iv-turn-me" : "iv-turn-ai"}`}>
-      <span className="iv-turn-who">{isCandidate ? "我" : "面试官"}</span>
+      <span className="iv-turn-who">
+        {isCandidate ? "我" : "面试官"}
+        {badge && <em className="iv-turn-intent">{badge}</em>}
+      </span>
       <p className="iv-turn-text">{turn.text}</p>
     </li>
   );

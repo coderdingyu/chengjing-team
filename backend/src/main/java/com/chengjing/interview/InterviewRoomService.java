@@ -13,13 +13,16 @@ import org.springframework.stereotype.Service;
  *
  * C01 — create and reopen a complete interview room.
  * C02 — store a text answer, keep the transcript in order and make repeated submissions idempotent.
+ * C03 — answer clarification / replay / thinking requests without turning them into scored answers.
  *
  * Acceptance:
  * <ul>
  *   <li>a room is created from a role and a target duration;</li>
  *   <li>a refreshed page can reopen the caller's own room, and somebody else's room is refused;</li>
  *   <li>submitting an answer leaves ordered question/answer records and never stores two answers for
- *       one request, and candidate text is stored as data rather than obeyed as an instruction.</li>
+ *       one request, and candidate text is stored as data rather than obeyed as an instruction;</li>
+ *   <li>each of the three intent requests gets a clear response, and clarify/replay never create an
+ *       answer that member D could score.</li>
  * </ul>
  */
 @Service
@@ -48,6 +51,10 @@ public class InterviewRoomService {
 
     /** Request body of {@code POST /api/v1/interviews/{id}/turns}. */
     public record TurnRequest(String requestId, String questionId, String text) {
+    }
+
+    /** Request body of {@code POST /api/v1/interviews/{id}/requests}. */
+    public record IntentRequest(String requestId, String questionId, String intent) {
     }
 
     /**
@@ -193,6 +200,73 @@ public class InterviewRoomService {
             room.turns().add(interviewer);
 
             return turnResult(room, candidate, reply.source());
+        }
+    }
+
+    /**
+     * Records a clarification, replay or thinking request.
+     *
+     * These are conversation turns, not answers: no {@link InterviewAnswer} is written, so member D
+     * never scores them and the room's answer count does not move. Like a text answer, the whole
+     * request is applied at most once per {@code requestId}.
+     */
+    public Map<String, Object> submitIntent(String roomId, IntentRequest request) {
+        String userId = currentUser.requireUserId();
+
+        String requestId = request.requestId() == null ? "" : request.requestId().trim();
+        if (!REQUEST_ID.matcher(requestId).matches()) {
+            throw InterviewException.badRequest("缺少有效的请求标识，请重试");
+        }
+        String intent = request.intent() == null ? "" : request.intent().trim().toUpperCase();
+        if (!InterviewIntent.isKnown(intent)) {
+            throw InterviewException.badRequest("不支持的请求类型");
+        }
+
+        InterviewRoom room = store.owned(userId, roomId);
+        synchronized (room) {
+            InterviewTurn already = room.turnForRequest(requestId);
+            if (already != null) {
+                if (!intent.equals(already.intent())) {
+                    throw InterviewException.conflict("该请求标识已被使用，请重新提交");
+                }
+                return turnResult(room, already, InterviewIntent.SOURCE);
+            }
+
+            requireActive(room);
+            if (room.turns().size() >= MAX_TURNS_PER_ROOM) {
+                throw InterviewException.conflict("本场对话已达上限，请结束并查看复盘");
+            }
+            String questionId = request.questionId() == null ? "" : request.questionId().trim();
+            if (!room.currentQuestionId().equals(questionId)) {
+                throw InterviewException.conflict("题目已更新，请刷新页面后继续");
+            }
+
+            InterviewStage stage = room.currentStage();
+            room.rememberRequest(requestId);
+
+            InterviewTurn candidate = new InterviewTurn(
+                    UUID.randomUUID().toString(),
+                    room.nextTurnSeq(),
+                    questionId,
+                    InterviewTurn.ROLE_CANDIDATE,
+                    InterviewIntent.candidateLine(intent),
+                    intent,
+                    requestId,
+                    Instant.now());
+            room.turns().add(candidate);
+
+            InterviewTurn interviewer = new InterviewTurn(
+                    UUID.randomUUID().toString(),
+                    room.nextTurnSeq(),
+                    questionId,
+                    InterviewTurn.ROLE_INTERVIEWER,
+                    InterviewIntent.reply(intent, stage),
+                    "RESPOND",
+                    null,
+                    Instant.now());
+            room.turns().add(interviewer);
+
+            return turnResult(room, candidate, InterviewIntent.SOURCE);
         }
     }
 

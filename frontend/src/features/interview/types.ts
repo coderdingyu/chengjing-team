@@ -76,12 +76,32 @@ export const GRADE_LABEL: Record<string, string> = {
   FAILED: "评分失败",
 };
 
+/** Turn intents C02/C03 put on the transcript. Only ANSWER is a scored answer. */
+export const INTENT_LABEL: Record<string, string> = {
+  ANSWER: "",
+  CLARIFY: "澄清",
+  REPLAY: "重听",
+  THINK: "思考",
+  RESPOND: "",
+};
+
+/** The three in-interview requests of C03, in the order the room offers them. */
+export const INTENT_ACTIONS = [
+  { intent: "CLARIFY", label: "澄清问题", hint: "请面试官说明这道题的重点" },
+  { intent: "REPLAY", label: "重听题目", hint: "请面试官再念一遍题目" },
+  { intent: "THINK", label: "思考一下", hint: "需要一点思考时间" },
+] as const;
+
 export function statusLabel(status: string): string {
   return STATUS_LABEL[status] ?? status;
 }
 
 export function gradeLabel(status: string): string {
   return GRADE_LABEL[status] ?? status;
+}
+
+export function intentLabel(intent: string): string {
+  return INTENT_LABEL[intent] ?? "";
 }
 
 export function formatClock(totalSeconds: number): string {

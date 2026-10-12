@@ -51,4 +51,11 @@ public class InterviewRoomController {
                                                        @RequestBody InterviewRoomService.TurnRequest request) {
         return ApiResponse.ok(service.submitTurn(id, request));
     }
+
+    /** C03 — clarification / replay / thinking request. Recorded as a turn, never as an answer. */
+    @PostMapping("/{id}/requests")
+    public ApiResponse<Map<String, Object>> submitIntent(@PathVariable String id,
+                                                         @RequestBody InterviewRoomService.IntentRequest request) {
+        return ApiResponse.ok(service.submitIntent(id, request));
+    }
 }
