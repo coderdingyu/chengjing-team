@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api";
 import { modules } from "./modules";
+import { InterviewLobby } from "./features/interview/InterviewLobby";
+import { InterviewReview } from "./features/interview/InterviewReview";
+import { InterviewRoom } from "./features/interview/InterviewRoom";
 
 function Home() {
   return (
@@ -102,6 +105,7 @@ export default function App() {
         </Link>
         <nav>
           <Link to="/">工作台</Link>
+          <Link to="/interviews">面试进行</Link>
           <a
             href="https://github.com/coderdingyu/chengjing-team"
             target="_blank"
@@ -119,6 +123,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/modules/:moduleId" element={<ModulePage />} />
+          <Route path="/interviews" element={<InterviewLobby />} />
+          <Route path="/interviews/:id" element={<InterviewRoom />} />
+          <Route path="/interviews/:id/review" element={<InterviewReview />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
